@@ -1,11 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { cookies } from 'next/headers';
 
 const prisma = new PrismaClient();
 
 export async function POST(request: Request, { params }: { params: { postId: string } }) {
   const { postId } = await params;
-navigationLinks: {}
   const cookieStore = await cookies();
   const thumbmark = cookieStore.get('thumbmark')?.value;
 
@@ -32,9 +31,14 @@ navigationLinks: {}
             id: existingVote.id,
           },
         });
+        const thirtyDaysFromNow = new Date();
+        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
         await prisma.post.update({
           where: { id: postId },
-          data: { votes: { decrement: 1 } },
+          data: {
+            votes: { decrement: 1 },
+            expiredAt: thirtyDaysFromNow,
+          } as Prisma.PostUpdateInput,
         });
         return new Response(JSON.stringify({ message: 'Upvote removed' }), {
           status: 200,
@@ -54,9 +58,14 @@ navigationLinks: {}
             type: 'upvote',
           },
         });
+        const thirtyDaysFromNow = new Date();
+        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
         await prisma.post.update({
           where: { id: postId },
-          data: { votes: { increment: 2 } }, // Increment by 2 because we're going from -1 to +1
+          data: {
+            votes: { increment: 2 }, // Increment by 2 because we're going from -1 to +1
+            expiredAt: thirtyDaysFromNow,
+          } as Prisma.PostUpdateInput,
         });
         return new Response(JSON.stringify({ message: 'Vote changed to upvote' }), {
           status: 200,
@@ -71,9 +80,14 @@ navigationLinks: {}
           type: 'upvote',
         },
       });
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
       await prisma.post.update({
         where: { id: postId },
-        data: { votes: { increment: 1 } },
+        data: {
+          votes: { increment: 1 },
+          expiredAt: thirtyDaysFromNow,
+        } as Prisma.PostUpdateInput,
       });
       return new Response(JSON.stringify({ message: 'Upvoted!' }), {
         status: 200,

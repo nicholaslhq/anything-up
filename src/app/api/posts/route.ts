@@ -1,5 +1,6 @@
 import prisma from '../../../../lib/prisma';
 import { NextResponse } from 'next/server';
+import { Post as PrismaPost, Prisma } from '@prisma/client';
 
 export async function POST(request: Request) {
   try {
@@ -14,11 +15,19 @@ export async function POST(request: Request) {
     const filteredTags = tags.filter((tag: string) => tag.trim() !== '');
 
     // Create the post in the database
+    const now = new Date();
+    const expiredAt = new Date();
+    expiredAt.setDate(now.getDate() + 30);
     const post = await prisma.post.create({
       data: {
         content,
         tags: filteredTags,
-      },
+        createdAt: now,
+        updatedAt: now,
+        expiredAt,
+        status: 'active',
+        votes: 0,
+      } as Prisma.PostCreateInput, // Use Prisma.PostCreateInput
     });
 
     return NextResponse.json(post, { status: 201 });
@@ -36,29 +45,36 @@ export async function GET(request: Request) {
   try {
     let orderBy = {};
     let where = {};
-    const now = new Date();
 
     if (sortBy === 'new') {
       orderBy = { createdAt: 'desc' };
     } else if (sortBy === 'top') {
       orderBy = { votes: 'desc' };
       if (timePeriod === 'day') {
-        where = { createdAt: { gte: new Date(now.setDate(now.getDate() - 1)) } };
+        const oneDayAgo = new Date();
+        oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+        where = { createdAt: { gte: oneDayAgo } };
       } else if (timePeriod === 'week') {
-        where = { createdAt: { gte: new Date(now.setDate(now.getDate() - 7)) } };
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        where = { createdAt: { gte: oneWeekAgo } };
       } else if (timePeriod === 'month') {
-        where = { createdAt: { gte: new Date(now.setMonth(now.getMonth() - 1)) } };
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+        where = { createdAt: { gte: oneMonthAgo } };
       }
     } else if (sortBy === 'trending') {
       orderBy = { votes: 'desc' }; // Sort by votes
-      where = { createdAt: { gte: new Date(now.setDate(now.getDate() - 1)) } }; // Filter by recent posts (last day)
+      const oneDayAgo = new Date();
+      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+      where = { createdAt: { gte: oneDayAgo } }; // Filter by recent posts (last day)
     }
 
     const posts = await prisma.post.findMany({
       orderBy,
       where,
     });
-    return NextResponse.json(posts);
+    return NextResponse.json<PrismaPost[]>(posts);
   } catch (error) {
     console.error("Error fetching posts:", error);
     return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 });
