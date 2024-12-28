@@ -1,6 +1,14 @@
 import prisma from '../../../../lib/prisma';
 import { NextResponse } from 'next/server';
 import { Post as PrismaPost, Prisma } from '@prisma/client';
+import * as fs from 'fs/promises';
+import path from 'path';
+
+const getConfig = async () => {
+  const configPath = path.join(process.cwd(), 'config', 'post.config.json');
+  const configFile = await fs.readFile(configPath, 'utf-8');
+  return JSON.parse(configFile);
+};
 
 export async function POST(request: Request) {
   try {
@@ -11,13 +19,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid or empty JSON body' }, { status: 400 });
     }
 
-    const { content, tags } = json;
+    const { content, tags, expirationDays } = json;
     const filteredTags = tags.filter((tag: string) => tag.trim() !== '');
+
+    // Read the configuration
+    const config = await getConfig();
+    const defaultExpirationDays = config.defaultExpirationDays || 30;
+    const finalExpirationDays = expirationDays !== undefined ? parseInt(expirationDays, 10) : defaultExpirationDays;
 
     // Create the post in the database
     const now = new Date();
     const expiredAt = new Date();
-    expiredAt.setDate(now.getDate() + 30);
+    expiredAt.setDate(now.getDate() + finalExpirationDays);
     const post = await prisma.post.create({
       data: {
         content,

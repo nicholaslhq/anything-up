@@ -1,7 +1,15 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { cookies } from 'next/headers';
+import path from 'path';
+import fs from 'fs/promises';
 
 const prisma = new PrismaClient();
+
+async function getConfig() {
+  const configPath = path.join(process.cwd(), 'config', 'post.config.json');
+  const configFile = await fs.readFile(configPath, 'utf8');
+  return JSON.parse(configFile);
+}
 
 export async function POST(request: Request, { params }: { params: { postId: string } }) {
   const { postId } = await params;
@@ -23,6 +31,11 @@ export async function POST(request: Request, { params }: { params: { postId: str
       },
     });
 
+    const config = await getConfig();
+    const defaultExpirationDays = config.defaultExpirationDays;
+    const expirationDate = new Date();
+    expirationDate.setDate(expirationDate.getDate() + defaultExpirationDays);
+
     if (existingVote) {
       if (existingVote.type === 'upvote') {
         console.log('Existing upvote found, removing upvote');
@@ -31,13 +44,11 @@ export async function POST(request: Request, { params }: { params: { postId: str
             id: existingVote.id,
           },
         });
-        const thirtyDaysFromNow = new Date();
-        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
         await prisma.post.update({
           where: { id: postId },
           data: {
             votes: { decrement: 1 },
-            expiredAt: thirtyDaysFromNow,
+            expiredAt: expirationDate,
           } as Prisma.PostUpdateInput,
         });
         return new Response(JSON.stringify({ message: 'Upvote removed' }), {
@@ -58,13 +69,11 @@ export async function POST(request: Request, { params }: { params: { postId: str
             type: 'upvote',
           },
         });
-        const thirtyDaysFromNow = new Date();
-        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
         await prisma.post.update({
           where: { id: postId },
           data: {
             votes: { increment: 2 }, // Increment by 2 because we're going from -1 to +1
-            expiredAt: thirtyDaysFromNow,
+            expiredAt: expirationDate,
           } as Prisma.PostUpdateInput,
         });
         return new Response(JSON.stringify({ message: 'Vote changed to upvote' }), {
@@ -80,13 +89,11 @@ export async function POST(request: Request, { params }: { params: { postId: str
           type: 'upvote',
         },
       });
-      const thirtyDaysFromNow = new Date();
-      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
       await prisma.post.update({
         where: { id: postId },
         data: {
           votes: { increment: 1 },
-          expiredAt: thirtyDaysFromNow,
+          expiredAt: expirationDate,
         } as Prisma.PostUpdateInput,
       });
       return new Response(JSON.stringify({ message: 'Upvoted!' }), {
