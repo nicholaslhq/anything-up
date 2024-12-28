@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import UserIdentifier from '@/components/UserIdentifier';
+import UserIdentifier from '../components/UserIdentifier';
+import ThemeSwitcher from '../components/ThemeSwitcher';
 
 interface Post {
   id: string;
@@ -111,10 +112,11 @@ export default function Home() {
               <option value="month">Month</option>
             </select>
           )}
+          <ThemeSwitcher />
         </div>
         <form className="flex flex-col gap-4 w-full max-w-lg" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="content" className="block font-medium text-gray-700">
+            <label htmlFor="content" className="block font-medium">
               Post Content
             </label>
             <textarea
@@ -127,7 +129,7 @@ export default function Home() {
             />
           </div>
           <div>
-            <label htmlFor="tags" className="block font-medium text-gray-700">
+            <label htmlFor="tags" className="block font-medium">
               Tags (optional, comma-separated)
             </label>
             <input
@@ -151,13 +153,13 @@ export default function Home() {
             <p>{post.content}</p>
             <div className="flex items-center mt-2">
               <button
-                className={`mr-2 px-2 py-1 text-white rounded ${votedPosts[post.id] === 'up' ? 'bg-green-500' : ''}`}
+                className={`mr-2 px-2 py-1 rounded ${votedPosts[post.id] === 'up' ? 'bg-green-500 text-white' : ''}`}
                 onClick={() => handleUpvote(post.id)}
               >
                 Upvote
               </button>
               <button
-                className={`px-2 py-1 text-white rounded ${votedPosts[post.id] === 'down' ? 'bg-red-500' : ''}`}
+                className={`px-2 py-1 rounded ${votedPosts[post.id] === 'down' ? 'bg-red-500 text-white' : ''}`}
                 onClick={() => handleDownvote(post.id)}
               >
                 Downvote
