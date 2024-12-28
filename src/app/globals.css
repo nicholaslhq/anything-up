@@ -19,3 +19,22 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Sorting Feature Styles */
+.sort-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem; /* Rounded corners */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Shadow */
+  background-color: #f97316; /* Orange background */
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.sort-button:hover {
+  background-color: #ea580c; /* Darker orange on hover */
+}
+
+.sort-button.active {
+  background-color: #dc2626; /* Red for active state */
+}

@@ -8,28 +8,29 @@ interface Post {
   content: string;
   votes: number;
 }
-
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
   const [votedPosts, setVotedPosts] = useState<{ [postId: string]: 'up' | 'down' | null }>({});
+  const [sortBy, setSortBy] = useState('new'); // Default sort
+  const [timePeriod, setTimePeriod] = useState('');
 
   useEffect(() => {
     const fetchPosts = async () => {
-      const res = await fetch('/api/posts');
+      const res = await fetch(`/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}`);
       const data: Post[] = await res.json();
       setPosts(data);
     };
 
     fetchPosts();
-  }, []);
+  }, [sortBy, timePeriod]);
 
   const handleUpvote = async (postId: string) => {
     const currentVote = votedPosts[postId];
     await fetch(`/api/posts/${postId}/upvote`, { method: 'POST' });
     // Refresh the posts after the upvote action
-    const res = await fetch('/api/posts');
+    const res = await fetch(`/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}`);
     const data: Post[] = await res.json();
     setPosts(data);
     setVotedPosts(prev => ({
@@ -42,7 +43,7 @@ export default function Home() {
     const currentVote = votedPosts[postId];
     await fetch(`/api/posts/${postId}/downvote`, { method: 'POST' });
     // Refresh the posts after the downvote action
-    const res = await fetch('/api/posts');
+    const res = await fetch(`/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}`);
     const data: Post[] = await res.json();
     setPosts(data);
     setVotedPosts(prev => ({
@@ -67,7 +68,7 @@ export default function Home() {
     
     
     // After submitting, refresh the posts
-    const res = await fetch('/api/posts');
+    const res = await fetch(`/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}`);
     const data: Post[] = await res.json();
     setPosts(data);
     setContent('');
@@ -79,6 +80,38 @@ export default function Home() {
       <main className="flex flex-col gap-8 items-center">
         <UserIdentifier />
         <h1 className="text-2xl font-bold">AnythingUp</h1>
+        <div className="flex gap-2">
+          <button
+            className={`sort-button ${sortBy === 'new' ? 'active' : ''}`}
+            onClick={() => setSortBy('new')}
+          >
+            New
+          </button>
+          <button
+            className={`sort-button ${sortBy === 'trending' ? 'active' : ''}`}
+            onClick={() => setSortBy('trending')}
+          >
+            Trending
+          </button>
+          <button
+            className={`sort-button ${sortBy === 'top' ? 'active' : ''}`}
+            onClick={() => setSortBy('top')}
+          >
+            Top
+          </button>
+          {sortBy === 'top' && (
+            <select
+              value={timePeriod}
+              onChange={(e) => setTimePeriod(e.target.value)}
+              className="ml-2"
+            >
+              <option value="">All Time</option>
+              <option value="day">Day</option>
+              <option value="week">Week</option>
+              <option value="month">Month</option>
+            </select>
+          )}
+        </div>
         <form className="flex flex-col gap-4 w-full max-w-lg" onSubmit={handleSubmit}>
           <div>
             <label htmlFor="content" className="block font-medium text-gray-700">
