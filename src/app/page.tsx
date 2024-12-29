@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent } from '../components/ui/card';
+import { ArrowBigUp, ArrowBigDown } from 'lucide-react';
 import UserIdentifier from '../components/UserIdentifier';
 import ThemeSwitcher from '../components/ThemeSwitcher';
 import {
@@ -145,26 +146,32 @@ export default function Home() {
           </Button>
         </form>
         {posts.map((post) => (
-          <Card key={post.id} className="mt-10">
-            <CardContent>
-              <p>{post.content}</p>
-              <div className="flex items-center mt-2">
+          <div key={post.id} className="mt-10 flex">
+            <Card className="flex-1">
+              <CardContent>
+                <p>{post.content}</p>
+              </CardContent>
+            </Card>
+            <div className="ml-4 flex flex-col items-center">
+              <div className="font-bold">{post.votes}</div>
+              <div className="flex gap-2 mt-2">
                 <Button
-                  variant={votedPosts[post.id] === 'up' ? 'neutral' : 'default'}
+                  variant={votedPosts[post.id] === 'up' ? 'default' : 'neutral'}
                   onClick={() => handleUpvote(post.id)}
+                  size={'icon'}
                 >
-                  Upvote
+                  <ArrowBigUp />
                 </Button>
                 <Button
-                  variant={votedPosts[post.id] === 'down' ? 'neutral' : 'default'}
+                  variant={votedPosts[post.id] === 'down' ? 'default' : 'neutral'}
                   onClick={() => handleDownvote(post.id)}
+                  size={'icon'}
                 >
-                  Downvote
+                  <ArrowBigDown />
                 </Button>
-                <span className="ml-4">Votes: {post.votes}</span>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </main>
     </div>
