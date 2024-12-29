@@ -76,7 +76,7 @@ export async function GET(request: Request) {
         oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
         where = { createdAt: { gte: oneMonthAgo } };
       }
-    } else if (sortBy === 'trending') {
+    } else if (sortBy === 'hot') {
       orderBy = { votes: 'desc' }; // Sort by votes
       const oneDayAgo = new Date();
       oneDayAgo.setDate(oneDayAgo.getDate() - 1);

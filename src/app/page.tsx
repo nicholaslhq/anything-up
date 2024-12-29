@@ -1,8 +1,18 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Card, CardContent } from '../components/ui/card';
 import UserIdentifier from '../components/UserIdentifier';
 import ThemeSwitcher from '../components/ThemeSwitcher';
+import {
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarTrigger,
+} from '../components/ui/menubar';
 
 interface Post {
   id: string;
@@ -14,8 +24,8 @@ export default function Home() {
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
   const [votedPosts, setVotedPosts] = useState<{ [postId: string]: 'up' | 'down' | null }>({});
-  const [sortBy, setSortBy] = useState('new'); // Default sort
-  const [timePeriod, setTimePeriod] = useState('');
+  const [sortBy, setSortBy] = useState('hot'); // Default sort
+  const [timePeriod, setTimePeriod] = useState('day');
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -81,92 +91,80 @@ export default function Home() {
       <main className="flex flex-col gap-8 items-center">
         <UserIdentifier />
         <h1 className="text-2xl font-bold">AnythingUp</h1>
-        <div className="flex gap-2">
-          <button
-            className={`sort-button ${sortBy === 'new' ? 'active' : ''}`}
-            onClick={() => setSortBy('new')}
-          >
-            New
-          </button>
-          <button
-            className={`sort-button ${sortBy === 'trending' ? 'active' : ''}`}
-            onClick={() => setSortBy('trending')}
-          >
-            Trending
-          </button>
-          <button
-            className={`sort-button ${sortBy === 'top' ? 'active' : ''}`}
-            onClick={() => setSortBy('top')}
-          >
-            Top
-          </button>
-          {sortBy === 'top' && (
-            <select
-              value={timePeriod}
-              onChange={(e) => setTimePeriod(e.target.value)}
-              className="ml-2"
-            >
-              <option value="">All Time</option>
-              <option value="day">Day</option>
-              <option value="week">Week</option>
-              <option value="month">Month</option>
-            </select>
-          )}
+        <Menubar>
+          <MenubarMenu>
+            <MenubarTrigger className={sortBy === 'hot' ? 'border-2 border-black' : ''} onClick={() => setSortBy('hot')}>
+              Hot
+            </MenubarTrigger>
+          </MenubarMenu>
+          <MenubarMenu>
+            <MenubarTrigger className={sortBy === 'new' ? 'border-2 border-black' : ''} onClick={() => setSortBy('new')}>
+              New
+            </MenubarTrigger>
+          </MenubarMenu>
+          <MenubarMenu>
+            <MenubarTrigger className={sortBy === 'top' ? 'border-2 border-black' : ''} onClick={() => setSortBy('top')}>
+              Top
+            </MenubarTrigger>
+            {sortBy === 'top' && (
+              <MenubarContent>
+                <MenubarItem onClick={() => setTimePeriod('day')}>Day</MenubarItem>
+                <MenubarItem onClick={() => setTimePeriod('week')}>Week</MenubarItem>
+                <MenubarItem onClick={() => setTimePeriod('month')}>Month</MenubarItem>
+              </MenubarContent>
+            )}
+          </MenubarMenu>
           <ThemeSwitcher />
-        </div>
+        </Menubar>
         <form className="flex flex-col gap-4 w-full max-w-lg" onSubmit={handleSubmit}>
           <div>
             <label htmlFor="content" className="block font-medium">
               Post Content
             </label>
-            <textarea
+            <Input
               id="content"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              rows={4}
               placeholder="What's on your mind?"
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setContent(e.target.value)}
             />
           </div>
           <div>
             <label htmlFor="tags" className="block font-medium">
               Tags (optional, comma-separated)
             </label>
-            <input
+            <Input
               type="text"
               id="tags"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               placeholder="#Tech, #News"
               value={tags}
-              onChange={(e) => setTags(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTags(e.target.value)}
             />
           </div>
-          <button
-            type="submit"
-            className="rounded-md bg-indigo-600 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
+          <Button type="submit">
             Submit Post
-          </button>
+          </Button>
         </form>
         {posts.map((post) => (
-          <div key={post.id} className="mt-10 p-4 border rounded">
-            <p>{post.content}</p>
-            <div className="flex items-center mt-2">
-              <button
-                className={`mr-2 px-2 py-1 rounded ${votedPosts[post.id] === 'up' ? 'bg-green-500 text-white' : ''}`}
-                onClick={() => handleUpvote(post.id)}
-              >
-                Upvote
-              </button>
-              <button
-                className={`px-2 py-1 rounded ${votedPosts[post.id] === 'down' ? 'bg-red-500 text-white' : ''}`}
-                onClick={() => handleDownvote(post.id)}
-              >
-                Downvote
-              </button>
-              <span className="ml-4">Votes: {post.votes}</span>
-            </div>
-          </div>
+          <Card key={post.id} className="mt-10">
+            <CardContent>
+              <p>{post.content}</p>
+              <div className="flex items-center mt-2">
+                <Button
+                  variant={votedPosts[post.id] === 'up' ? 'neutral' : 'default'}
+                  onClick={() => handleUpvote(post.id)}
+                >
+                  Upvote
+                </Button>
+                <Button
+                  variant={votedPosts[post.id] === 'down' ? 'neutral' : 'default'}
+                  onClick={() => handleDownvote(post.id)}
+                >
+                  Downvote
+                </Button>
+                <span className="ml-4">Votes: {post.votes}</span>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </main>
     </div>

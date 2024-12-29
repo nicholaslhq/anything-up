@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { Moon, Sun } from 'lucide-react';
 
 const ThemeSwitcher: React.FC = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -31,9 +32,9 @@ const ThemeSwitcher: React.FC = () => {
   };
 
   return (
-    <button onClick={toggleTheme}>
-      {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-    </button>
+    <div onClick={toggleTheme} className="cursor-pointer px-3 py-1.5">
+      {theme === 'light' ? <Moon /> : <Sun />}
+    </div>
   );
 };
 
