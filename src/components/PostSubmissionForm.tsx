@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardFooter, CardHeader } from "./ui/card";
@@ -16,14 +16,21 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 	content,
 	setContent,
 }) => {
-	const [tagInputs, setTagInputs] = useState<string[]>([""]);
-	const tagLimit = postConfig.tagLimit;
+	const [tagInputs, setTagInputs] = useState<string[]>([]);
+	const newPostTagLimit = postConfig.newPostTagLimit;
+	const tagInputRefs = useRef<HTMLInputElement[]>([]);
 
 	const addTagInput = () => {
-		if (tagInputs.every(input => input.trim() !== "") && tagInputs.length < tagLimit) {
+		if (tagInputs.length < newPostTagLimit) {
 			setTagInputs([...tagInputs, ""]);
 		}
 	};
+
+	useEffect(() => {
+		if (tagInputs.length > 0 && tagInputRefs.current[tagInputs.length - 1]) {
+			tagInputRefs.current[tagInputs.length - 1].focus();
+		}
+	}, [tagInputs]);
 
 	const handleTagInputChange = (index: number, value: string) => {
 		const newTagInputs = [...tagInputs];
@@ -54,25 +61,32 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 				</CardHeader>
 				<CardFooter>
 					<div className="flex flex-row gap-2 flex-wrap break-all">
-						{tagInputs.map((tagInput, index) => (
-							<div key={index}>
-								<Input
-									placeholder="Tag"
-									prefix="#"
-									className="w-24"
-									value={tagInput}
-									onChange={(e) => handleTagInputChange(index, e.target.value)}
-								/>
-							</div>
+						{tagInputs.length > 0 && tagInputs.map((tagInput, index) => (
+							<Input
+								key={index}
+								ref={(el) => {
+									if (el) {
+										if (!tagInputRefs.current) {
+											tagInputRefs.current = [];
+										}
+										tagInputRefs.current[index] = el;
+									}
+								}}
+								placeholder="Tag"
+								prefix="#"
+								className="w-24"
+								value={tagInput}
+								onChange={(e) => handleTagInputChange(index, e.target.value)}
+							/>
 						))}
-						{tagInputs.length < tagLimit && (
+						{tagInputs.length < newPostTagLimit && (
 							<div>
 								<Button
 									type="button"
 									variant="neutral"
 									size="icon"
 									onClick={addTagInput}
-									disabled={tagInputs.some(input => input.trim() === "")}
+									disabled={tagInputs.some(input => input.trim() === "") && tagInputs.length > 0}
 								>
 									<Plus />
 								</Button>

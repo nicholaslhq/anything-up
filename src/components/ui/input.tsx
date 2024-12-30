@@ -9,7 +9,7 @@ export interface InputProps
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, prefix, ...props }, ref) => {
     return (
-      <div className="relative w-full">
+      <div className="relative">
         {prefix && (
           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-text">
             {prefix}

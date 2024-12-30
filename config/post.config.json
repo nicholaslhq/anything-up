@@ -1,5 +1,5 @@
 {
   "defaultExpirationDays": 30,
   "initialTagDisplayLimit": 3,
-  "tagLimit": 5
+  "newPostTagLimit": 5
 }
