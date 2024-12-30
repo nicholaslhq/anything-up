@@ -34,8 +34,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 				</CardHeader>
 				<CardFooter>
 					<div className="flex flex-row gap-2">
-						<div>
-            {showTagsInput ? (
+						{showTagsInput ? (
 							<Input
 								placeholder="Tag"
 								prefix="#"
@@ -44,18 +43,17 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 						) : (
 							""
 						)}
-            </div>
 
 						<div>
-            <Button
-							type="button"
-							variant="neutral"
-							size="icon"
-							onClick={() => setShowTagsInput(true)}
-						>
-							<Plus />
-						</Button>
-            </div>
+							<Button
+								type="button"
+								variant="neutral"
+								size="icon"
+								onClick={() => setShowTagsInput(true)}
+							>
+								<Plus />
+							</Button>
+						</div>
 					</div>
 				</CardFooter>
 			</Card>
