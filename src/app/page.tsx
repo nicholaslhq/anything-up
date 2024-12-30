@@ -12,14 +12,7 @@ import {
 } from "../components/ui/card";
 import { ArrowBigUp, ArrowBigDown, Ellipsis } from "lucide-react";
 import UserIdentifier from "../components/UserIdentifier";
-import ThemeSwitcher from "../components/ThemeSwitcher";
-import {
-	Menubar,
-	MenubarContent,
-	MenubarItem,
-	MenubarMenu,
-	MenubarTrigger,
-} from "../components/ui/menubar";
+import NavigationBar from "../components/NavigationBar";
 
 interface Post {
 	id: string;
@@ -112,58 +105,12 @@ export default function Home() {
 			<main className="flex flex-col gap-8 items-center">
 				<UserIdentifier />
 				<h1 className="text-2xl font-bold">AnythingUp</h1>
-				<Menubar>
-					<MenubarMenu>
-						<MenubarTrigger
-							className={
-								sortBy === "hot" ? "border-2 border-black" : ""
-							}
-							onClick={() => setSortBy("hot")}
-						>
-							Hot
-						</MenubarTrigger>
-					</MenubarMenu>
-					<MenubarMenu>
-						<MenubarTrigger
-							className={
-								sortBy === "new" ? "border-2 border-black" : ""
-							}
-							onClick={() => setSortBy("new")}
-						>
-							New
-						</MenubarTrigger>
-					</MenubarMenu>
-					<MenubarMenu>
-						<MenubarTrigger
-							className={
-								sortBy === "top" ? "border-2 border-black" : ""
-							}
-							onClick={() => setSortBy("top")}
-						>
-							Top
-						</MenubarTrigger>
-						{sortBy === "top" && (
-							<MenubarContent>
-								<MenubarItem
-									onClick={() => setTimePeriod("day")}
-								>
-									Day
-								</MenubarItem>
-								<MenubarItem
-									onClick={() => setTimePeriod("week")}
-								>
-									Week
-								</MenubarItem>
-								<MenubarItem
-									onClick={() => setTimePeriod("month")}
-								>
-									Month
-								</MenubarItem>
-							</MenubarContent>
-						)}
-					</MenubarMenu>
-					<ThemeSwitcher />
-				</Menubar>
+				<NavigationBar
+					sortBy={sortBy}
+					setSortBy={setSortBy}
+					timePeriod={timePeriod}
+					setTimePeriod={setTimePeriod}
+				/>
 				<form
 					className="flex flex-col gap-4 w-full max-w-lg"
 					onSubmit={handleSubmit}
