@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import postConfig from "../../config/post.config.json";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import {
@@ -215,14 +216,14 @@ export default function Home() {
 													</CardContent>
 												</Card>
 										  ))
-										: post.tags.slice(0, 3).map((tag) => (
+										: post.tags.slice(0, postConfig.initialTagLimit).map((tag) => (
 												<Card key={tag}>
 													<CardContent className="px-4 text-sm">
 														<span>#{tag}</span>
 													</CardContent>
 												</Card>
 										  ))}
-									{post.tags.length > 3 && (
+									{post.tags.length > postConfig.initialTagLimit && (
 										<Button
 											size="sm"
 											onClick={() => setShowAllTags(!showAllTags)}
