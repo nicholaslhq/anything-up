@@ -1,56 +1,66 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { Card, CardFooter, CardHeader } from "./ui/card";
+import { Plus } from "lucide-react";
 
 interface PostSubmissionFormProps {
 	onSubmit: (event: React.FormEvent) => void;
 	content: string;
 	setContent: React.Dispatch<React.SetStateAction<string>>;
-	tags: string;
-	setTags: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 	onSubmit,
 	content,
 	setContent,
-	tags,
-	setTags,
 }) => {
+	const [showTagsInput, setShowTagsInput] = useState(false);
+
 	return (
-		<form
-			className="flex flex-col gap-4 w-full max-w-lg"
-			onSubmit={onSubmit}
-		>
-			<div>
-				<label htmlFor="content" className="block font-medium">
-					Post Content
-				</label>
-				<Input
-					id="content"
-					placeholder="What's on your mind?"
-					value={content}
-					onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-						setContent(e.target.value)
-					}
-				/>
-			</div>
-			<div>
-				<label htmlFor="tags" className="block font-medium">
-					Tags (optional, comma-separated)
-				</label>
-				<Input
-					type="text"
-					id="tags"
-					placeholder="#Tech, #News"
-					value={tags}
-					onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-						setTags(e.target.value)
-					}
-				/>
-			</div>
-			<Button type="submit">Submit Post</Button>
-		</form>
+		<div className="mt-10 flex gap-3 md:gap-5 w-full sm:max-w-lg">
+			<Card className="w-full max-w-lg">
+				<CardHeader>
+					<form onSubmit={onSubmit} className="space-y-4">
+						<Input
+							id="content"
+							placeholder="What’s happening in your world?"
+							value={content}
+							onChange={(
+								e: React.ChangeEvent<HTMLInputElement>
+							) => setContent(e.target.value)}
+						/>
+					</form>
+				</CardHeader>
+				<CardFooter>
+					<div className="flex flex-row gap-2">
+						<div>
+            {showTagsInput ? (
+							<Input
+								placeholder="Tag"
+								prefix="#"
+								className="w-24"
+							/>
+						) : (
+							""
+						)}
+            </div>
+
+						<div>
+            <Button
+							type="button"
+							variant="neutral"
+							size="icon"
+							onClick={() => setShowTagsInput(true)}
+						>
+							<Plus />
+						</Button>
+            </div>
+					</div>
+				</CardFooter>
+			</Card>
+			<Button type="submit">Submit</Button>
+		</div>
 	);
 };
 

@@ -24,7 +24,7 @@ const PostTags: React.FC<PostTagsProps> = ({ tags }) => {
   return (
     <div>
       {tags && tags.length > 0 && (
-      <div className="flex gap-3 md:gap-5 flex-wrap break-all">
+      <div className="flex gap-2 flex-wrap break-all">
         {showAllTags
           ? tags.map((tag) => (
               <Card key={tag}>

@@ -9,7 +9,6 @@ import PostComponent, { Post } from "../components/Post";
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [content, setContent] = useState("");
-  const [tags, setTags] = useState("");
   const [votedPosts, setVotedPosts] = useState<{
     [postId: string]: "up" | "down" | null;
   }>({});
@@ -71,7 +70,6 @@ export default function Home() {
       },
       body: JSON.stringify({
         content,
-        tags: tags.split(",").map((tag) => tag.trim()),
       }),
     });
 
@@ -82,7 +80,6 @@ export default function Home() {
     const data: Post[] = await res.json();
     setPosts(data);
     setContent("");
-    setTags("");
   };
 
   return (
@@ -100,8 +97,6 @@ export default function Home() {
           onSubmit={handleSubmit}
           content={content}
           setContent={setContent}
-          tags={tags}
-          setTags={setTags}
         />
         {posts.map((post) => (
           <div
