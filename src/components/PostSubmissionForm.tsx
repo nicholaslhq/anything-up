@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardFooter, CardHeader } from "./ui/card";
 import { Plus } from "lucide-react";
-import postConfig from "@/../config/post.config.json";
+import postConfig from "../../config/post.config.json";
 
 interface PostSubmissionFormProps {
 	onSubmit: (event: React.FormEvent, tags: string[]) => void;
@@ -42,22 +42,21 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 		event.preventDefault();
 		const tagsToAdd = tagInputs.map(input => input.trim()).filter(tag => tag !== "");
 		onSubmit(event, tagsToAdd);
+		setTagInputs([]);
 	};
 
 	return (
-		<div className="mt-10 flex gap-3 md:gap-5 w-full sm:max-w-lg">
+		<form onSubmit={handleSubmit} className="mt-10 flex gap-3 md:gap-5 w-full sm:max-w-lg">
 			<Card className="w-full max-w-lg">
 				<CardHeader>
-					<form onSubmit={handleSubmit} className="space-y-4">
-						<Input
-							id="content"
-							placeholder="What’s happening in your world?"
-							value={content}
-							onChange={(
-								e: React.ChangeEvent<HTMLInputElement>
-							) => setContent(e.target.value)}
-						/>
-					</form>
+					<Input
+						id="content"
+						placeholder="What’s happening in your world?"
+						value={content}
+						onChange={(
+							e: React.ChangeEvent<HTMLInputElement>
+						) => setContent(e.target.value)}
+					/>
 				</CardHeader>
 				<CardFooter>
 					<div className="flex flex-row gap-2 flex-wrap break-all">
@@ -96,7 +95,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 				</CardFooter>
 			</Card>
 			<Button type="submit">Submit</Button>
-		</div>
+		</form>
 	);
 };
 

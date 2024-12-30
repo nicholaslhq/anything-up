@@ -57,7 +57,7 @@ export default function Home() {
     }));
   };
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent, tags: string[]) => {
     event.preventDefault();
     if (!content.trim()) {
       alert("Please enter some content for your post.");
@@ -70,6 +70,7 @@ export default function Home() {
       },
       body: JSON.stringify({
         content,
+        tags,
       }),
     });
 
