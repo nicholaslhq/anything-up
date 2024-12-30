@@ -9,7 +9,7 @@ import {
 	CardFooter,
 	CardHeader,
 } from "../components/ui/card";
-import { ArrowBigUp, ArrowBigDown } from "lucide-react";
+import { ArrowBigUp, ArrowBigDown, Ellipsis } from "lucide-react";
 import UserIdentifier from "../components/UserIdentifier";
 import ThemeSwitcher from "../components/ThemeSwitcher";
 import {
@@ -30,6 +30,7 @@ export default function Home() {
 	const [posts, setPosts] = useState<Post[]>([]);
 	const [content, setContent] = useState("");
 	const [tags, setTags] = useState("");
+	const [showAllTags, setShowAllTags] = useState(false);
 	const [votedPosts, setVotedPosts] = useState<{
 		[postId: string]: "up" | "down" | null;
 	}>({});
@@ -206,13 +207,30 @@ export default function Home() {
 							</CardHeader>
 							{post.tags && post.tags.length > 0 && (
 								<CardFooter className="flex gap-3 md:gap-5 flex-wrap break-all">
-									{post.tags.map((tag) => (
-										<Card key={tag}>
-											<CardContent className="px-4 text-sm">
-												<span>#{tag}</span>
-											</CardContent>
-										</Card>
-									))}
+									{showAllTags
+										? post.tags.map((tag) => (
+												<Card key={tag}>
+													<CardContent className="px-4 text-sm">
+														<span>#{tag}</span>
+													</CardContent>
+												</Card>
+										  ))
+										: post.tags.slice(0, 3).map((tag) => (
+												<Card key={tag}>
+													<CardContent className="px-4 text-sm">
+														<span>#{tag}</span>
+													</CardContent>
+												</Card>
+										  ))}
+									{post.tags.length > 3 && (
+										<Button
+											size="sm"
+											onClick={() => setShowAllTags(!showAllTags)}
+											variant={showAllTags ? "default" : "neutral"}
+										>
+											<Ellipsis />
+										</Button>
+									)}
 								</CardFooter>
 							)}
 						</Card>
