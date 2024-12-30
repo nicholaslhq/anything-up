@@ -33,14 +33,14 @@ const PostTags: React.FC<PostTagsProps> = ({ tags }) => {
                 </CardContent>
               </Card>
             ))
-          : tags.slice(0, postConfig.initialTagLimit).map((tag) => (
+          : tags.slice(0, postConfig.initialTagDisplayLimit).map((tag) => (
               <Card key={tag}>
                 <CardContent className="px-4 text-sm">
                   <span>#{tag}</span>
                 </CardContent>
               </Card>
             ))}
-        {tags.length > postConfig.initialTagLimit && (
+        {tags.length > postConfig.initialTagDisplayLimit && (
           <Button
             size="sm"
             onClick={() => setShowAllTags(!showAllTags)}

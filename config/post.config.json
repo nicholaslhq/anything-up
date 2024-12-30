@@ -1,4 +1,5 @@
 {
   "defaultExpirationDays": 30,
-  "initialTagLimit": 3
+  "initialTagDisplayLimit": 3,
+  "tagLimit": 5
 }
