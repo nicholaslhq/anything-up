@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
+import PostSubmissionForm from "../components/PostSubmissionForm";
 import UserIdentifier from "../components/UserIdentifier";
 import NavigationBar from "../components/NavigationBar";
 import PostComponent, { Post } from "../components/Post";
@@ -97,39 +96,13 @@ export default function Home() {
           timePeriod={timePeriod}
           setTimePeriod={setTimePeriod}
         />
-        <form
-          className="flex flex-col gap-4 w-full max-w-lg"
+        <PostSubmissionForm
           onSubmit={handleSubmit}
-        >
-          <div>
-            <label htmlFor="content" className="block font-medium">
-              Post Content
-            </label>
-            <Input
-              id="content"
-              placeholder="What's on your mind?"
-              value={content}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setContent(e.target.value)
-              }
-            />
-          </div>
-          <div>
-            <label htmlFor="tags" className="block font-medium">
-              Tags (optional, comma-separated)
-            </label>
-            <Input
-              type="text"
-              id="tags"
-              placeholder="#Tech, #News"
-              value={tags}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setTags(e.target.value)
-              }
-            />
-          </div>
-          <Button type="submit">Submit Post</Button>
-        </form>
+          content={content}
+          setContent={setContent}
+          tags={tags}
+          setTags={setTags}
+        />
         {posts.map((post) => (
           <div
             key={post.id}
