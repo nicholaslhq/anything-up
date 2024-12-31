@@ -1,7 +1,7 @@
 import React from 'react';
-import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { ArrowBigUp, ArrowBigDown } from "lucide-react";
+import PostVoteCount from "./PostVoteCount";
 
 interface PostVoteProps {
   postId: string;
@@ -20,11 +20,7 @@ const PostVote: React.FC<PostVoteProps> = ({
 }) => {
   return (
     <div className="flex w-auto flex-col items-center">
-      <Card className="w-full text-center">
-        <CardContent>
-          <p>{votes}</p>
-        </CardContent>
-      </Card>
+      <PostVoteCount votes={votes} />
       <div className="flex gap-2 mt-2">
         <Button
           variant={votedPosts[postId] === "up" ? "default" : "neutral"}
