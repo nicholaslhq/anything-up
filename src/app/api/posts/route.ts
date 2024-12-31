@@ -1,6 +1,6 @@
 import prisma from '../../../../lib/prisma';
 import { NextResponse } from 'next/server';
-import { Post as PrismaPost, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import * as fs from 'fs/promises';
 import path from 'path';
 
@@ -87,7 +87,29 @@ export async function GET(request: Request) {
       orderBy,
       where,
     });
-    return NextResponse.json<PrismaPost[]>(posts);
+
+    const postsWithDetails = await Promise.all(
+      posts.map(async (post) => ({
+        ...post,
+        upVotes: await prisma.vote.count({
+          where: {
+            postId: post.id,
+            type: 'up',
+          },
+        }),
+        downVotes: await prisma.vote.count({
+          where: {
+            postId: post.id,
+            type: 'down',
+          },
+        }),
+        expiresInDays: Math.ceil(
+          (post.expiredAt.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+        ),
+      }))
+    );
+
+    return NextResponse.json(postsWithDetails);
   } catch (error) {
     console.error("Error fetching posts:", error);
     return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 });

@@ -5,7 +5,9 @@ import PostVoteCount from "./PostVoteCount";
 
 interface PostVoteProps {
   postId: string;
-  votes: number;
+  upVotes: number;
+  downVotes: number;
+  expiresInDays: number;
   votedPosts: { [postId: string]: "up" | "down" | null };
   handleUpvote: (postId: string) => void;
   handleDownvote: (postId: string) => void;
@@ -13,14 +15,16 @@ interface PostVoteProps {
 
 const PostVote: React.FC<PostVoteProps> = ({
   postId,
-  votes,
+  upVotes,
+  downVotes,
+  expiresInDays,
   votedPosts,
   handleUpvote,
   handleDownvote,
 }) => {
   return (
     <div className="flex w-auto flex-col items-center">
-      <PostVoteCount votes={votes} />
+      <PostVoteCount upVotes={upVotes} downVotes={downVotes} expiresInDays={expiresInDays} />
       <div className="flex gap-2 mt-2">
         <Button
           variant={votedPosts[postId] === "up" ? "default" : "neutral"}

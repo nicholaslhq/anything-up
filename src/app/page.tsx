@@ -4,7 +4,21 @@ import { useState, useEffect } from "react";
 import PostSubmissionForm from "../components/PostSubmissionForm";
 import UserIdentifier from "../components/UserIdentifier";
 import NavigationBar from "../components/NavigationBar";
-import PostComponent, { Post } from "../components/Post";
+import PostComponent from "../components/Post";
+
+export interface Post {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  content: string;
+  votes: number;
+  status: string;
+  expiredAt: Date;
+  tags: string[];
+  upVotes: number;
+  downVotes: number;
+  expiresInDays: number;
+}
 
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -30,12 +44,20 @@ export default function Home() {
   const handleUpvote = async (postId: string) => {
     const currentVote = votedPosts[postId];
     await fetch(`/api/posts/${postId}/upvote`, { method: "POST" });
-    // Refresh the posts after the upvote action
-    const res = await fetch(
-      `/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}`
+    setPosts((prevPosts) =>
+      prevPosts.map((post) => {
+        if (post.id === postId) {
+          if (currentVote === "up") {
+            return { ...post, upVotes: post.upVotes - 1 };
+          } else if (currentVote === "down") {
+            return { ...post, downVotes: post.downVotes - 1, upVotes: post.upVotes + 1 };
+          } else {
+            return { ...post, upVotes: post.upVotes + 1 };
+          }
+        }
+        return post;
+      })
     );
-    const data: Post[] = await res.json();
-    setPosts(data);
     setVotedPosts((prev) => ({
       ...prev,
       [postId]: currentVote === "up" ? null : "up",
@@ -45,12 +67,20 @@ export default function Home() {
   const handleDownvote = async (postId: string) => {
     const currentVote = votedPosts[postId];
     await fetch(`/api/posts/${postId}/downvote`, { method: "POST" });
-    // Refresh the posts after the downvote action
-    const res = await fetch(
-      `/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}`
+    setPosts((prevPosts) =>
+      prevPosts.map((post) => {
+        if (post.id === postId) {
+          if (currentVote === "down") {
+            return { ...post, downVotes: post.downVotes - 1 };
+          } else if (currentVote === "up") {
+            return { ...post, upVotes: post.upVotes - 1, downVotes: post.downVotes + 1 };
+          } else {
+            return { ...post, downVotes: post.downVotes + 1 };
+          }
+        }
+        return post;
+      })
     );
-    const data: Post[] = await res.json();
-    setPosts(data);
     setVotedPosts((prev) => ({
       ...prev,
       [postId]: currentVote === "down" ? null : "down",

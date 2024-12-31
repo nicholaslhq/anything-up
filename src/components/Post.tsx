@@ -6,7 +6,9 @@ import PostVote from "./PostVote";
 export interface Post {
 	id: string;
 	content: string;
-	votes: number;
+	upVotes: number;
+	downVotes: number;
+	expiresInDays: number;
 	tags?: string[];
 }
 
@@ -41,7 +43,9 @@ const Post: React.FC<PostProps> = ({
 				handleUpvote={handleUpvote}
 				handleDownvote={handleDownvote}
 				votedPosts={votedPosts}
-				votes={post.votes}
+				upVotes={post.upVotes}
+				downVotes={post.downVotes}
+				expiresInDays={post.expiresInDays}
 			/>
 		</div>
 	);
