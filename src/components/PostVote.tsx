@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "./ui/button";
-import { ArrowBigUp, ArrowBigDown } from "lucide-react";
+import { ArrowBigUp, ArrowBigDown, Frown } from "lucide-react";
 import PostVoteCount from "./PostVoteCount";
 import { Skeleton } from "./ui/skeleton";
 
@@ -13,6 +13,7 @@ interface PostVoteProps {
 	handleUpvote: (postId: string) => void;
 	handleDownvote: (postId: string) => void;
 	loading?: boolean;
+	error?: boolean;
 }
 
 const PostVote: React.FC<PostVoteProps> = ({
@@ -24,12 +25,17 @@ const PostVote: React.FC<PostVoteProps> = ({
 	handleUpvote,
 	handleDownvote,
 	loading = false,
+	error = false,
 }) => {
 	return (
 		<div className="flex w-auto flex-col items-center">
 			{loading ? (
 				<Button variant="neutral" className="w-full" disabled={loading}>
 					<Skeleton className="h-4 w-full" />
+				</Button>
+			) : error ? (
+				<Button variant="neutral" className="w-full" disabled={error}>
+					<Frown />
 				</Button>
 			) : (
 				<PostVoteCount
@@ -45,7 +51,7 @@ const PostVote: React.FC<PostVoteProps> = ({
 					}
 					onClick={() => handleUpvote(postId)}
 					size={"icon"}
-					disabled={loading}
+					disabled={loading || error}
 				>
 					<ArrowBigUp />
 				</Button>
@@ -55,7 +61,7 @@ const PostVote: React.FC<PostVoteProps> = ({
 					}
 					onClick={() => handleDownvote(postId)}
 					size={"icon"}
-					disabled={loading}
+					disabled={loading || error}
 				>
 					<ArrowBigDown />
 				</Button>

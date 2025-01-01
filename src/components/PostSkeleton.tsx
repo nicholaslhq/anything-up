@@ -23,6 +23,7 @@ const PostSkeleton: React.FC = () => {
 				downVotes={0}
 				expiresInDays={0}
 				loading={true}
+				error={false}
 			/>
 		</div>
 	);

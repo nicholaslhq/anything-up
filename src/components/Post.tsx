@@ -60,6 +60,7 @@ const Post: React.FC<PostProps> = ({
 				upVotes={post.upVotes}
 				downVotes={post.downVotes}
 				expiresInDays={post.expiresInDays}
+        		error={error !== null}
 			/>
 		</div>
 	);
