@@ -141,12 +141,13 @@ export default function Home() {
     );
     const data: Post[] = await res.json();
     setPosts(data);
+    setEmpty(data.length === 0);
     setContent("");
   };
 
   return (
-    <div className="min-h-screen p-4 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 items-center">
+    <div className="min-h-screen p-4 sm:p-10 font-[family-name:var(--font-geist-sans)]">
+      <main className="flex flex-col gap-16 items-center">
         <UserIdentifier />
         <h1 className="text-2xl font-bold">AnythingUp</h1>
         <NavigationBar
@@ -164,7 +165,7 @@ export default function Home() {
         {posts.map((post) => (
           <div
             key={post.id}
-            className="mt-10 flex gap-3 md:gap-5 w-full sm:max-w-lg"
+            className="flex w-full sm:max-w-lg"
           >
             <PostComponent post={post} handleUpvote={handleUpvote} handleDownvote={handleDownvote} votedPosts={votedPosts} />
           </div>
