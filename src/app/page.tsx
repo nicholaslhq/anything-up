@@ -70,7 +70,7 @@ export default function Home() {
     };
 
     fetchPosts();
-  }, [sortBy, timePeriod]);
+  }, [sortBy, timePeriod, postLoadingTimeout]);
 
   const handleUpvote = async (postId: string) => {
     const currentVote = votedPosts[postId];
