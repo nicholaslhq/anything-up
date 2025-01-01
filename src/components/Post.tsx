@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardHeader, CardFooter } from "./ui/card";
 import PostTags from "./PostTags";
 import PostVote from "./PostVote";
@@ -25,20 +25,6 @@ const Post: React.FC<PostProps> = ({
 	handleDownvote,
 	votedPosts,
 }) => {
-	const [error, setError] = useState<string | null>(null);
-
-	if (error) {
-		return (
-			<div className="flex gap-3 md:gap-5 w-full sm:max-w-lg">
-				<Card>
-					<CardHeader>
-						<p className="text-red-500">Error: {error}</p>
-					</CardHeader>
-				</Card>
-			</div>
-		);
-	}
-
 	return (
 		<div
 			key={post.id}
@@ -60,7 +46,6 @@ const Post: React.FC<PostProps> = ({
 				upVotes={post.upVotes}
 				downVotes={post.downVotes}
 				expiresInDays={post.expiresInDays}
-				error={error !== null}
 			/>
 		</div>
 	);
