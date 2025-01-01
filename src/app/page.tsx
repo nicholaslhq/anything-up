@@ -25,6 +25,7 @@ export interface Post {
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
+  const [empty, setEmpty] = useState(false);
   const [content, setContent] = useState("");
   const postLoadingTimeout = postConfig.postLoadingTimeout;
   const [votedPosts, setVotedPosts] = useState<{
@@ -55,6 +56,7 @@ export default function Home() {
         } else {
           const data: Post[] = await res.json();
           setPosts(data);
+          setEmpty(data.length === 0);
         }
       } catch (e: unknown) {
         console.error("Failed to fetch posts:", e);
@@ -158,7 +160,7 @@ export default function Home() {
           content={content}
           setContent={setContent}
         />
-        <PostStatus error={error} loading={loading} />
+        <PostStatus error={error} loading={loading} empty={empty} />
         {posts.map((post) => (
           <div
             key={post.id}
