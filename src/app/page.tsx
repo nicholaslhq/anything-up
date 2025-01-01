@@ -5,6 +5,8 @@ import PostSubmissionForm from "../components/PostSubmissionForm";
 import UserIdentifier from "../components/UserIdentifier";
 import NavigationBar from "../components/NavigationBar";
 import PostComponent from "../components/Post";
+import PostStatus from "../components/PostStatus";
+import postConfig from "../../config/post.config.json";
 
 export interface Post {
   id: string;
@@ -22,20 +24,47 @@ export interface Post {
 
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(false);
   const [content, setContent] = useState("");
+  const postLoadingTimeout = postConfig.postLoadingTimeout;
   const [votedPosts, setVotedPosts] = useState<{
     [postId: string]: "up" | "down" | null;
   }>({});
   const [sortBy, setSortBy] = useState("hot"); // Default sort
   const [timePeriod, setTimePeriod] = useState("day");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPosts = async () => {
-      const res = await fetch(
-        `/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}`
-      );
-      const data: Post[] = await res.json();
-      setPosts(data);
+      setLoading(true);
+      setError(null);
+      let timeoutId: NodeJS.Timeout | null = null;
+      if (postLoadingTimeout) {
+        timeoutId = setTimeout(() => {
+          setError("Failed to load posts. Please check your connection.");
+          setLoading(false);
+        }, postLoadingTimeout);
+      }
+      try {
+        const res = await fetch(
+          `/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}`
+        );
+        if (!res.ok) {
+          const message = `Failed to fetch posts: ${res.status} ${res.statusText}`;
+          setError(message);
+        } else {
+          const data: Post[] = await res.json();
+          setPosts(data);
+        }
+      } catch (e: unknown) {
+        console.error("Failed to fetch posts:", e);
+        setError("Failed to load posts. Please check your connection.");
+      } finally {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        setLoading(false);
+      }
     };
 
     fetchPosts();
@@ -129,6 +158,7 @@ export default function Home() {
           content={content}
           setContent={setContent}
         />
+        <PostStatus error={error} loading={loading} />
         {posts.map((post) => (
           <div
             key={post.id}
