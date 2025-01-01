@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardFooter, CardHeader } from "./ui/card";
@@ -17,25 +17,35 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 	setContent,
 }) => {
 	const [tagInputs, setTagInputs] = useState<string[]>([]);
+	const [tagErrors, setTagErrors] = useState<string[]>([]);
 	const newPostTagLimit = postConfig.newPostTagLimit;
 	const tagInputRefs = useRef<HTMLInputElement[]>([]);
 
 	const addTagInput = () => {
 		if (tagInputs.length < newPostTagLimit) {
 			setTagInputs([...tagInputs, ""]);
+			setTagErrors([...tagErrors, ""]);
+			// Focus on the last input after it's added
+			setTimeout(() => {
+				if (tagInputRefs.current.length > 0) {
+					tagInputRefs.current[tagInputs.length].focus();
+				}
+			}, 0);
 		}
 	};
 
-	useEffect(() => {
-		if (tagInputs.length > 0 && tagInputRefs.current[tagInputs.length - 1]) {
-			tagInputRefs.current[tagInputs.length - 1].focus();
-		}
-	}, [tagInputs]);
-
 	const handleTagInputChange = (index: number, value: string) => {
 		const newTagInputs = [...tagInputs];
+		const newTagErrors = [...tagErrors];
+		const regex = /[^a-zA-Z0-9]/g;
+		if (regex.test(value)) {
+			newTagErrors[index] = "Only alphanumeric characters are allowed.";
+		} else {
+			newTagErrors[index] = "";
+		}
 		newTagInputs[index] = value;
 		setTagInputs(newTagInputs);
+		setTagErrors(newTagErrors);
 	};
 
 	const handleSubmit = (event: React.FormEvent) => {
@@ -43,6 +53,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 		const tagsToAdd = tagInputs.map(input => input.trim()).filter(tag => tag !== "");
 		onSubmit(event, tagsToAdd);
 		setTagInputs([]);
+		setTagErrors([]);
 	};
 
 	return (
@@ -61,22 +72,23 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 				<CardFooter>
 					<div className="flex flex-row gap-2 flex-wrap break-all">
 						{tagInputs.length > 0 && tagInputs.map((tagInput, index) => (
-							<Input
-								key={index}
-								ref={(el) => {
-									if (el) {
-										if (!tagInputRefs.current) {
-											tagInputRefs.current = [];
+							<div key={index}>
+								<Input
+									ref={(el) => {
+										if (el) {
+											if (!tagInputRefs.current) {
+												tagInputRefs.current = [];
+											}
+											tagInputRefs.current[index] = el;
 										}
-										tagInputRefs.current[index] = el;
-									}
-								}}
-								placeholder="Tag"
-								prefix="#"
-								className="w-24"
-								value={tagInput}
-								onChange={(e) => handleTagInputChange(index, e.target.value)}
-							/>
+									}}
+									placeholder="Tag"
+									prefix="#"
+									className={`w-24 ${tagErrors[index] ? 'bg-red-300' : ''}`}
+									value={tagInput}
+									onChange={(e) => handleTagInputChange(index, e.target.value)}
+								/>
+							</div>
 						))}
 						{tagInputs.length < newPostTagLimit && (
 							<div>
@@ -94,7 +106,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 					</div>
 				</CardFooter>
 			</Card>
-			<Button type="submit">Submit</Button>
+			<Button type="submit" disabled={tagErrors.some(error => error !== "") || content.trim() === ""}>Submit</Button>
 		</form>
 	);
 };
