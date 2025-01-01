@@ -5,6 +5,8 @@ import { Card, CardFooter, CardHeader } from "./ui/card";
 import { Plus } from "lucide-react";
 import postConfig from "../../config/post.config.json";
 
+const maxPostContentLength = postConfig.maxPostContentLength;
+
 interface PostSubmissionFormProps {
 	onSubmit: (event: React.FormEvent, tags: string[]) => void;
 	content: string;
@@ -16,6 +18,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 	content,
 	setContent,
 }) => {
+	const [postContentLength, setPostContentLength] = useState(0);
 	const [tagInputs, setTagInputs] = useState<string[]>([]);
 	const [tagErrors, setTagErrors] = useState<string[]>([]);
 	const newPostTagLimit = postConfig.newPostTagLimit;
@@ -66,8 +69,20 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 						value={content}
 						onChange={(
 							e: React.ChangeEvent<HTMLInputElement>
-						) => setContent(e.target.value)}
+						) => {
+							const inputValue = e.target.value;
+							if (inputValue.length <= maxPostContentLength) {
+								setContent(inputValue);
+								setPostContentLength(inputValue.length);
+							} else {
+								setContent(inputValue.slice(0, maxPostContentLength));
+								setPostContentLength(maxPostContentLength);
+							}
+						}}
 					/>
+					<div className="text-sm text-gray-500">
+						{postContentLength}/{maxPostContentLength}
+					</div>
 				</CardHeader>
 				<CardFooter>
 					<div className="flex flex-row gap-2 flex-wrap break-all">
