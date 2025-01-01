@@ -46,7 +46,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 	};
 
 	return (
-		<form onSubmit={handleSubmit} className="mt-10 flex gap-3 md:gap-5 w-full sm:max-w-lg">
+		<form onSubmit={handleSubmit} className="flex gap-3 md:gap-5 w-full sm:max-w-lg">
 			<Card className="w-full max-w-lg">
 				<CardHeader>
 					<Input

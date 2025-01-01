@@ -4,7 +4,7 @@ import PostVote from "./PostVote";
 
 const PostEmpty = () => {
 	return (
-		<div className="mt-10 flex gap-3 md:gap-5 w-full sm:max-w-lg">
+		<div className="flex gap-3 md:gap-5 w-full sm:max-w-lg">
 			<Card className="flex-1">
 				<CardHeader>
 					<p>Nothing up right now. Create one?</p>

@@ -29,7 +29,7 @@ const Post: React.FC<PostProps> = ({
 
 	if (error) {
 		return (
-			<div className="mt-10 flex gap-3 md:gap-5 w-full sm:max-w-lg">
+			<div className="flex gap-3 md:gap-5 w-full sm:max-w-lg">
 				<Card>
 					<CardHeader>
 						<p className="text-red-500">Error: {error}</p>
@@ -42,7 +42,7 @@ const Post: React.FC<PostProps> = ({
 	return (
 		<div
 			key={post.id}
-			className="mt-10 flex gap-3 md:gap-5 w-full sm:max-w-lg"
+			className="flex gap-3 md:gap-5 w-full sm:max-w-lg"
 		>
 			<Card className="flex-1">
 				<CardHeader>
@@ -60,7 +60,7 @@ const Post: React.FC<PostProps> = ({
 				upVotes={post.upVotes}
 				downVotes={post.downVotes}
 				expiresInDays={post.expiresInDays}
-        		error={error !== null}
+				error={error !== null}
 			/>
 		</div>
 	);
