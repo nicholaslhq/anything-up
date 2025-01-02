@@ -161,15 +161,20 @@ export default function Home() {
           content={content}
           setContent={setContent}
         />
-        <PostStatus error={error} loading={loading} empty={empty} />
-        {posts.map((post) => (
-          <div
-            key={post.id}
-            className="flex w-full sm:max-w-lg"
-          >
-            <PostComponent post={post} handleUpvote={handleUpvote} handleDownvote={handleDownvote} votedPosts={votedPosts} />
-          </div>
-        ))}
+        {loading ? (
+          <PostStatus error={error} loading={loading} empty={empty} />
+        ) : (
+          posts.map((post) => (
+            <div key={post.id} className="flex w-full sm:max-w-lg">
+              <PostComponent
+                post={post}
+                handleUpvote={handleUpvote}
+                handleDownvote={handleDownvote}
+                votedPosts={votedPosts}
+              />
+            </div>
+          ))
+        )}
       </main>
     </div>
   );
