@@ -28,7 +28,7 @@ const Post: React.FC<PostProps> = ({
 	return (
 		<div
 			key={post.id}
-			className="flex gap-3 md:gap-5 w-full sm:max-w-lg"
+			className="flex gap-3 md:gap-5 w-full sm:max-w-lg break-all"
 		>
 			<Card className="flex-1">
 				<CardHeader>
