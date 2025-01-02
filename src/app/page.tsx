@@ -149,7 +149,7 @@ export default function Home() {
     <div className="min-h-screen p-4 sm:p-10 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-16 items-center">
         <UserIdentifier />
-        <h1 className="text-2xl font-bold">AnythingUp</h1>
+        <h1 className="text-2xl font-bold text-text">AnythingUp</h1>
         <NavigationBar
           sortBy={sortBy}
           setSortBy={setSortBy}
