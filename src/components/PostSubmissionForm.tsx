@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { Textarea } from "./ui/textarea"; // Import the Textarea component
 import { Card, CardFooter, CardHeader } from "./ui/card";
 import { Plus } from "lucide-react";
 import postConfig from "../../config/post.config.json";
@@ -63,12 +64,12 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 		<form onSubmit={handleSubmit} className="flex gap-3 md:gap-5 w-full sm:max-w-lg">
 			<Card className="w-full max-w-lg">
 				<CardHeader>
-					<Input
+					<Textarea // Replace Input with Textarea
 						id="content"
 						placeholder="What’s happening in your world?"
 						value={content}
 						onChange={(
-							e: React.ChangeEvent<HTMLInputElement>
+							e: React.ChangeEvent<HTMLTextAreaElement> // Update event type
 						) => {
 							const inputValue = e.target.value;
 							if (inputValue.length <= maxPostContentLength) {
@@ -79,6 +80,9 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 								setPostContentLength(maxPostContentLength);
 							}
 						}}
+						autoExpand={true}
+						minHeight={40}
+						maxHeight={200}
 					/>
 					<div className="text-sm text-gray-500">
 						{postContentLength}/{maxPostContentLength}
