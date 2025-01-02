@@ -19,7 +19,6 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       if (autoExpand && textareaRef.current) {
         if (minHeight) {
           textareaRef.current.style.minHeight = typeof minHeight === 'number' ? `${minHeight}px` : minHeight;
-          console.log(textareaRef.current.scrollHeight);
           if (textareaRef.current.scrollHeight > (typeof minHeight === 'number' ? minHeight : parseInt(minHeight))) {
             textareaRef.current.style.height = `${minHeight}px`;
           }

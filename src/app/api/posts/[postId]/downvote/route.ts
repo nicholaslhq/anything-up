@@ -38,7 +38,6 @@ export async function POST(request: Request, { params }: { params: { postId: str
 
     if (existingVote) {
       if (existingVote.type === 'downvote') {
-        console.log('Existing downvote found, removing downvote');
         await prisma.vote.delete({
           where: {
             id: existingVote.id,
@@ -56,7 +55,6 @@ export async function POST(request: Request, { params }: { params: { postId: str
           headers: { 'Content-Type': 'application/json' },
         });
       } else if (existingVote.type === 'upvote') {
-        console.log('Existing upvote found, removing upvote and adding downvote');
         await prisma.vote.delete({
           where: {
             id: existingVote.id,

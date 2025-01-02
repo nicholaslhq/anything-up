@@ -13,7 +13,6 @@ const getConfig = async () => {
 export async function POST(request: Request) {
   try {
     const json = await request.json();
-    console.log("Parsed JSON:", json);
 
     if (!json || typeof json !== 'object') {
       return NextResponse.json({ error: 'Invalid or empty JSON body' }, { status: 400 });
