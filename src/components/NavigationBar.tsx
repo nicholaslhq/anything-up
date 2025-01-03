@@ -7,13 +7,14 @@ import {
 	MenubarTrigger,
 } from "./ui/menubar";
 import ThemeSwitcher from "./ThemeSwitcher";
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
 
 interface NavigationBarProps {
 	sortBy: string;
 	setSortBy: (sortBy: string) => void;
 	timePeriod: string;
 	setTimePeriod: (timePeriod: string) => void;
+	isFormVisible: boolean;
 	setIsFormVisible: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
@@ -22,13 +23,16 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 	setSortBy,
 	timePeriod,
 	setTimePeriod,
+	isFormVisible,
 	setIsFormVisible,
 }) => {
 	return (
 		<Menubar>
 			<MenubarMenu>
-				<MenubarTrigger onClick={() => setIsFormVisible(true)}>
-					<Plus />
+				<MenubarTrigger
+					onClick={() => setIsFormVisible(!isFormVisible)}
+				>
+					{isFormVisible ? <X /> : <Plus />}
 				</MenubarTrigger>
 			</MenubarMenu>
 			<MenubarMenu>
