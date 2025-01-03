@@ -1,14 +1,8 @@
 import prisma from '../../../../lib/prisma';
 import { NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
-import * as fs from 'fs/promises';
-import path from 'path';
 
-const getConfig = async () => {
-  const configPath = path.join(process.cwd(), 'config', 'post.config.json');
-  const configFile = await fs.readFile(configPath, 'utf-8');
-  return JSON.parse(configFile);
-};
+const POST_SETTING_DEFAULT_EXPIRATION_DAYS = 30;
 
 export async function POST(request: Request) {
   try {
@@ -21,10 +15,7 @@ export async function POST(request: Request) {
     const { content, tags, expirationDays } = json;
     const filteredTags = tags.filter((tag: string) => tag.trim() !== '');
 
-    // Read the configuration
-    const config = await getConfig();
-    const defaultExpirationDays = config.defaultExpirationDays || 30;
-    const finalExpirationDays = expirationDays !== undefined ? parseInt(expirationDays, 10) : defaultExpirationDays;
+    const finalExpirationDays = expirationDays !== undefined ? parseInt(expirationDays, 10) : POST_SETTING_DEFAULT_EXPIRATION_DAYS;
 
     // Create the post in the database
     const now = new Date();

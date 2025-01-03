@@ -1,7 +1,0 @@
-{
-  "defaultExpirationDays": 30,
-  "initialTagDisplayLimit": 3,
-  "newPostTagLimit": 5,
-  "postLoadingTimeout": 5000,
-  "maxPostContentLength": 300
-}

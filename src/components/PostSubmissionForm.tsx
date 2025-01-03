@@ -4,9 +4,9 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea"; // Import the Textarea component
 import { Card, CardFooter, CardHeader } from "./ui/card";
 import { Plus } from "lucide-react";
-import postConfig from "../../config/post.config.json";
 
-const maxPostContentLength = postConfig.maxPostContentLength;
+const POST_SETTING_NEW_TAG_LIMIT  = 5;
+const POST_SETTING_MAX_CONTENT_LENGTH  = 300;
 
 interface PostSubmissionFormProps {
   onSubmit: (
@@ -39,12 +39,11 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
     }
   }, [isVisible, setContent, setTagInputs, setTagErrors]);
 
-  const newPostTagLimit = postConfig.newPostTagLimit;
   const tagInputRefs = useRef<HTMLInputElement[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const addTagInput = () => {
-    if (tagInputs.length < newPostTagLimit) {
+    if (tagInputs.length < POST_SETTING_NEW_TAG_LIMIT ) {
       setTagInputs([...tagInputs, ""]);
       setTagErrors([...tagErrors, ""]);
       // Focus on the last input after it's added
@@ -93,20 +92,20 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
     <form onSubmit={handleSubmit} className="flex gap-3 md:gap-5 w-full sm:max-w-lg">
       <Card className="w-full max-w-lg">
         <CardHeader>
-          <Textarea // Replace Input with Textarea
+          <Textarea
             id="content"
             placeholder="What’s happening in your world?"
             value={content}
             onChange={(
-              e: React.ChangeEvent<HTMLTextAreaElement> // Update event type
+              e: React.ChangeEvent<HTMLTextAreaElement>
             ) => {
               const inputValue = e.target.value;
-              if (inputValue.length <= maxPostContentLength) {
+              if (inputValue.length <= POST_SETTING_MAX_CONTENT_LENGTH ) {
                 setContent(inputValue);
                 setPostContentLength(inputValue.length);
               } else {
-                setContent(inputValue.slice(0, maxPostContentLength));
-                setPostContentLength(maxPostContentLength);
+                setContent(inputValue.slice(0, POST_SETTING_MAX_CONTENT_LENGTH ));
+                setPostContentLength(POST_SETTING_MAX_CONTENT_LENGTH );
               }
             }}
             autoExpand={true}
@@ -115,7 +114,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
             ref={textareaRef}
           />
           <div className="text-sm text-gray-500">
-            {postContentLength}/{maxPostContentLength}
+            {postContentLength}/{POST_SETTING_MAX_CONTENT_LENGTH }
           </div>
         </CardHeader>
         <CardFooter>
@@ -139,7 +138,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
                 />
               </div>
             ))}
-            {tagInputs.length < newPostTagLimit && (
+            {tagInputs.length < POST_SETTING_NEW_TAG_LIMIT  && (
               <div>
                 <Button
                   type="button"

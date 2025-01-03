@@ -1,15 +1,9 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { cookies } from 'next/headers';
-import path from 'path';
-import fs from 'fs/promises';
 
 const prisma = new PrismaClient();
 
-async function getConfig() {
-  const configPath = path.join(process.cwd(), 'config', 'post.config.json');
-  const configFile = await fs.readFile(configPath, 'utf8');
-  return JSON.parse(configFile);
-}
+const POST_SETTING_DEFAULT_EXPIRATION_DAYS = 30;
 
 export async function POST(request: Request, { params }: { params: { postId: string } }) {
   const { postId } = await params;
@@ -31,10 +25,8 @@ export async function POST(request: Request, { params }: { params: { postId: str
       },
     });
 
-    const config = await getConfig();
-    const defaultExpirationDays = config.defaultExpirationDays;
     const expirationDate = new Date();
-    expirationDate.setDate(expirationDate.getDate() + defaultExpirationDays);
+    expirationDate.setDate(expirationDate.getDate() + POST_SETTING_DEFAULT_EXPIRATION_DAYS);
 
     if (existingVote) {
       if (existingVote.type === 'upvote') {
