@@ -24,7 +24,7 @@ const Menubar = React.forwardRef<
   <MenubarPrimitive.Root
     ref={ref}
     className={cn(
-      'flex h-11 items-center space-x-4 rounded-base border-2 border-border bg-main px-4 py-6 shadow-shadow sticky top-4 z-30',
+      'flex h-11 items-center space-x-4 rounded-base border-2 border-border bg-main px-2 md:px-4 py-6 shadow-shadow sticky top-4 z-30',
       className,
     )}
     {...props}
@@ -39,7 +39,7 @@ const MenubarTrigger = React.forwardRef<
   <MenubarPrimitive.Trigger
     ref={ref}
     className={cn(
-      'flex cursor-pointer select-none text-mtext items-center rounded-base border-2 border-transparent px-3 py-1.5 text-sm font-heading outline-none hover:border-border',
+      'flex cursor-pointer select-none text-mtext items-center rounded-base border-2 border-transparent px-2 md:px-3 py-1.5 text-sm font-heading outline-none hover:border-border',
       className,
     )}
     {...props}
@@ -56,7 +56,7 @@ const MenubarSubTrigger = React.forwardRef<
   <MenubarPrimitive.SubTrigger
     ref={ref}
     className={cn(
-      'flex cursor-default select-none items-center rounded-base border-2 border-transparent px-3 py-1.5 text-sm font-base outline-none focus:border-border data-[state=open]:border-border',
+      'flex cursor-default select-none items-center rounded-base border-2 border-transparent px-2 md:px-3 py-1.5 text-sm font-base outline-none focus:border-border data-[state=open]:border-border',
       inset && 'pl-8',
       className,
     )}
@@ -117,7 +117,7 @@ const MenubarItem = React.forwardRef<
   <MenubarPrimitive.Item
     ref={ref}
     className={cn(
-      'relative flex cursor-pointer select-none items-center rounded-base border-2 border-transparent px-3 py-1.5 text-sm font-base outline-none focus:border-border data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+      'relative flex cursor-pointer select-none items-center rounded-base border-2 border-transparent px-2 md:px-3 py-1.5 text-sm font-base outline-none focus:border-border data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       inset && 'pl-8',
       className,
     )}
