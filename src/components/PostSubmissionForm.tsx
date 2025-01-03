@@ -72,6 +72,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
     setTagInputs([]);
     setTagErrors([]);
     onVisibilityChange(false); // Hide the form after submission
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   };
 
   if (!isVisible) {

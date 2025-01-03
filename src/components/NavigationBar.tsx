@@ -30,7 +30,12 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 		<Menubar>
 			<MenubarMenu>
 				<MenubarTrigger
-					onClick={() => setIsFormVisible(!isFormVisible)}
+					onClick={() => {
+						setIsFormVisible(!isFormVisible);
+						if (!isFormVisible) {
+							window.scrollTo({ top: 0, behavior: 'smooth' });
+						}
+					}}
 				>
 					{isFormVisible ? <X /> : <Plus />}
 				</MenubarTrigger>
