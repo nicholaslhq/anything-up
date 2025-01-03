@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea"; // Import the Textarea component
@@ -29,6 +29,16 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
   const [postContentLength, setPostContentLength] = useState(0);
   const [tagInputs, setTagInputs] = useState<string[]>([]);
   const [tagErrors, setTagErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!isVisible) {
+      setContent("");
+      setPostContentLength(0);
+      setTagInputs([]);
+      setTagErrors([]);
+    }
+  }, [isVisible, setContent, setTagInputs, setTagErrors]);
+
   const newPostTagLimit = postConfig.newPostTagLimit;
   const tagInputRefs = useRef<HTMLInputElement[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -71,7 +81,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
     setPostContentLength(0);
     setTagInputs([]);
     setTagErrors([]);
-    onVisibilityChange(false); // Hide the form after submission
+    onVisibilityChange(false);
     window.scrollTo({ top: 0, behavior: 'smooth' })
   };
 
