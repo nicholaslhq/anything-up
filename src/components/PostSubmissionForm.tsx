@@ -24,6 +24,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 	const [tagErrors, setTagErrors] = useState<string[]>([]);
 	const newPostTagLimit = postConfig.newPostTagLimit;
 	const tagInputRefs = useRef<HTMLInputElement[]>([]);
+	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 	const addTagInput = () => {
 		if (tagInputs.length < newPostTagLimit) {
@@ -56,6 +57,11 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 		event.preventDefault();
 		const tagsToAdd = tagInputs.map(input => input.trim()).filter(tag => tag !== "");
 		onSubmit(event, tagsToAdd);
+		if (textareaRef.current) {
+			textareaRef.current.value = "";
+		}
+		setContent("");
+		setPostContentLength(0);
 		setTagInputs([]);
 		setTagErrors([]);
 	};
@@ -83,6 +89,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 						autoExpand={true}
 						minHeight={40}
 						maxHeight={200}
+						ref={textareaRef}
 					/>
 					<div className="text-sm text-gray-500">
 						{postContentLength}/{maxPostContentLength}
