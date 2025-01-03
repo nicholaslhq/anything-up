@@ -71,8 +71,11 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const tagsToAdd = tagInputs.map(input => input.trim()).filter(tag => tag !== "");
-    await onSubmit(event, tagsToAdd);
+    const tagsToAdd = tagInputs
+      .map(input => input.trim())
+      .filter(tag => tag !== "");
+    const uniqueTagsToAdd = [...new Set(tagsToAdd)]; // Eliminate duplicates
+    await onSubmit(event, uniqueTagsToAdd);
     if (textareaRef.current) {
       textareaRef.current.value = "";
     }
@@ -81,7 +84,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
     setTagInputs([]);
     setTagErrors([]);
     onVisibilityChange(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (!isVisible) {
