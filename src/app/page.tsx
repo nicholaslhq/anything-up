@@ -27,6 +27,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [empty, setEmpty] = useState(false);
   const [content, setContent] = useState("");
+  const [isFormVisible, setIsFormVisible] = useState(false);
   const postLoadingTimeout = postConfig.postLoadingTimeout;
   const [votedPosts, setVotedPosts] = useState<{
     [postId: string]: "up" | "down" | null;
@@ -155,12 +156,15 @@ export default function Home() {
           setSortBy={setSortBy}
           timePeriod={timePeriod}
           setTimePeriod={setTimePeriod}
+          setIsFormVisible={setIsFormVisible}
         />
-        <PostSubmissionForm
-          onSubmit={handleSubmit}
-          content={content}
-          setContent={setContent}
-        />
+                    <PostSubmissionForm
+                      onSubmit={handleSubmit}
+                      content={content}
+                      setContent={setContent}
+                      isVisible={isFormVisible}
+                      onVisibilityChange={setIsFormVisible}
+                    />
         {loading ? (
           <PostStatus error={error} loading={loading} empty={empty} />
         ) : (
