@@ -8,7 +8,7 @@ const PostSkeleton: React.FC = () => {
 		<div className="flex gap-3 md:gap-5 w-full sm:max-w-lg">
 			<Card className="flex-1">
 				<CardHeader>
-					<Skeleton className="h-4 w-[200px]" />
+					<Skeleton className="h-4 w-[150px] sm:w-[200px]" />
 				</CardHeader>
 				<CardFooter>
 					<Skeleton className="h-4 w-[100px]" />
