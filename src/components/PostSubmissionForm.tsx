@@ -3,7 +3,8 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea"; // Import the Textarea component
 import { Card, CardFooter, CardHeader } from "./ui/card";
-import { Plus, Send, Eraser } from "lucide-react";
+import { Plus } from "lucide-react";
+import FormActions from "./FormActions";
 
 const POST_SETTING_NEW_TAG_LIMIT = 5;
 const POST_SETTING_MAX_CONTENT_LENGTH = 300;
@@ -194,46 +195,13 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 					</div>
 				</CardFooter>
 			</Card>
-			<div className="flex w-auto flex-col items-center">
-				<Button
-					className="w-full"
-					variant="neutral"
-					onClick={(e) => {
-						e.preventDefault();
-					}}
-				>
-					<div className="text-sm text-gray-500">
-						{postContentLength}/{POST_SETTING_MAX_CONTENT_LENGTH}
-					</div>
-				</Button>
-				<div className="flex gap-2 mt-2">
-					<Button
-						type="submit"
-						size="icon"
-						variant="neutral"
-						className="[&_svg]:size-5"
-						disabled={
-							tagErrors.some((error) => error !== "") ||
-							content.trim() === ""
-						}
-					>
-						<Send />
-					</Button>
-					<Button
-						type="button"
-						size="icon"
-						variant="neutral"
-						className="[&_svg]:size-5"
-						onClick={(e) => {
-							e.preventDefault();
-							clearForm();
-						}}
-						disabled={content.trim() === ""}
-					>
-						<Eraser />
-					</Button>
-				</div>
-			</div>
+			<FormActions
+				postContentLength={postContentLength}
+				maxContentLength={POST_SETTING_MAX_CONTENT_LENGTH}
+				clearForm={clearForm}
+				tagErrors={tagErrors}
+				content={content}
+			/>
 		</form>
 	);
 };
