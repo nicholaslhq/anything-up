@@ -26,7 +26,7 @@ const FormActions: React.FC<FormActionsProps> = ({
 					e.preventDefault();
 				}}
 			>
-				<div className="text-sm text-gray-500">
+				<div className="text-sm">
 					{postContentLength}/{maxContentLength}
 				</div>
 			</Button>
