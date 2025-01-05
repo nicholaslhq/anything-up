@@ -4,7 +4,7 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea"; // Import the Textarea component
 import { Card, CardFooter, CardHeader } from "./ui/card";
 import { Plus } from "lucide-react";
-import FormActions from "./FormActions";
+import PostFormAction from "./PostFormAction";
 
 const POST_SETTING_NEW_TAG_LIMIT = 5;
 const POST_SETTING_MAX_CONTENT_LENGTH = 300;
@@ -185,7 +185,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 					</div>
 				</CardFooter>
 			</Card>
-			<FormActions
+			<PostFormAction
 				postContentLength={postContentLength}
 				maxContentLength={POST_SETTING_MAX_CONTENT_LENGTH}
 				clearForm={clearForm}

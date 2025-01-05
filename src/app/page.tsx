@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import PostSubmissionForm from "../components/PostSubmissionForm";
+import PostForm from "../components/PostForm";
 import UserIdentifier from "../components/UserIdentifier";
 import NavigationBar from "../components/NavigationBar";
 import PostComponent from "../components/Post";
@@ -166,7 +166,7 @@ export default function Home() {
           isFormVisible={isFormVisible}
           setIsFormVisible={setIsFormVisible}
         />
-        <PostSubmissionForm
+        <PostForm
           handleSubmit={handleSubmit}
           content={content}
           setContent={setContent}

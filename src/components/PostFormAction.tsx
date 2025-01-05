@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover";
 import { Send, Eraser, PenLine } from "lucide-react";
 
-interface FormActionsProps {
+interface PostFormActionProps {
 	postContentLength: number;
 	maxContentLength: number;
 	clearForm: () => void;
@@ -11,7 +11,7 @@ interface FormActionsProps {
 	content: string;
 }
 
-const FormActions: React.FC<FormActionsProps> = ({
+const PostFormAction: React.FC<PostFormActionProps> = ({
 	postContentLength,
 	maxContentLength,
 	clearForm,
@@ -67,4 +67,4 @@ const FormActions: React.FC<FormActionsProps> = ({
 	);
 };
 
-export default FormActions;
+export default PostFormAction;
