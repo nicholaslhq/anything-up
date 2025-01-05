@@ -6,6 +6,7 @@ import UserIdentifier from "@/components/UserIdentifier";
 import NavigationBar from "@/components/NavigationBar";
 import PostComponent from "@/components/post/Post";
 import PostStatus from "@/components/post/PostStatus";
+import { useToast } from "@/hooks/use-toast"
 
 const POST_SETTING_LOADING_TIMEOUT = 5000;
 
@@ -35,6 +36,7 @@ export default function Home() {
   const [sortBy, setSortBy] = useState("hot"); // Default sort
   const [timePeriod, setTimePeriod] = useState("day");
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast()
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -128,10 +130,6 @@ export default function Home() {
 
   const handleSubmit = async (event: React.FormEvent, tags: string[]) => {
     event.preventDefault();
-    if (!content.trim()) {
-      alert("Please enter some content for your post.");
-      return;
-    }
     await fetch("/api/posts", {
       method: "POST",
       headers: {
@@ -143,7 +141,11 @@ export default function Home() {
       }),
     });
 
-    // After submitting, refresh the posts
+    toast({
+      title: "It’s Up!",
+      description: "Your world is up for everyone to see",
+    })
+
     const res = await fetch(
       `/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}`
     );

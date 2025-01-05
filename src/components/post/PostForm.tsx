@@ -101,7 +101,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 				<CardHeader>
 					<Textarea
 						id="content"
-						placeholder="What’s happening in your world?"
+						placeholder="Anything up in your world?"
 						value={content}
 						onChange={(
 							e: React.ChangeEvent<HTMLTextAreaElement>
