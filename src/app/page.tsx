@@ -163,15 +163,15 @@ export default function Home() {
           setSortBy={setSortBy}
           timePeriod={timePeriod}
           setTimePeriod={setTimePeriod}
-          setIsFormVisible={setIsFormVisible}
           isFormVisible={isFormVisible}
+          setIsFormVisible={setIsFormVisible}
         />
         <PostSubmissionForm
-          onSubmit={handleSubmit}
+          handleSubmit={handleSubmit}
           content={content}
           setContent={setContent}
           isVisible={isFormVisible}
-          onVisibilityChange={setIsFormVisible}
+          setIsFormVisible={setIsFormVisible}
         />
         {loading ? (
           <PostStatus error={error} loading={loading} empty={empty} />

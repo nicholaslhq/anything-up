@@ -10,19 +10,19 @@ const POST_SETTING_NEW_TAG_LIMIT = 5;
 const POST_SETTING_MAX_CONTENT_LENGTH = 300;
 
 interface PostSubmissionFormProps {
-	onSubmit: (event: React.FormEvent, tags: string[]) => Promise<void>;
+	handleSubmit: (event: React.FormEvent, tags: string[]) => Promise<void>;
 	content: string;
 	setContent: React.Dispatch<React.SetStateAction<string>>;
 	isVisible: boolean;
-	onVisibilityChange: (isVisible: boolean) => void;
+	setIsFormVisible: (isVisible: boolean) => void;
 }
 
 const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
-	onSubmit,
+	handleSubmit,
 	content,
 	setContent,
 	isVisible,
-	onVisibilityChange,
+	setIsFormVisible,
 }) => {
 	const [postContentLength, setPostContentLength] = useState(0);
 	const [tagInputs, setTagInputs] = useState<string[]>([]);
@@ -84,13 +84,13 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 		setTagErrors(newTagErrors);
 	};
 
-	const handleSubmit = async (event: React.FormEvent) => {
+	const onSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
 		const tagsToAdd = tagInputs
 			.map((input) => input.trim())
 			.filter((tag) => tag !== "");
 		const uniqueTagsToAdd = [...new Set(tagsToAdd)]; // Eliminate duplicates
-		await onSubmit(event, uniqueTagsToAdd);
+		await handleSubmit(event, uniqueTagsToAdd);
 		if (textareaRef.current) {
 			textareaRef.current.value = "";
 		}
@@ -98,7 +98,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 		setPostContentLength(0);
 		setTagInputs([]);
 		setTagErrors([]);
-		onVisibilityChange(false);
+		setIsFormVisible(false);
 		window.scrollTo({ top: 0, behavior: "smooth" });
 	};
 
@@ -108,7 +108,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 
 	return (
 		<form
-			onSubmit={handleSubmit}
+			onSubmit={onSubmit}
 			className="flex gap-3 md:gap-5 w-full sm:max-w-lg"
 		>
 			<Card className="w-full max-w-lg">
