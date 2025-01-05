@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "./ui/button";
-import { Send, Eraser } from "lucide-react";
+import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover";
+import { Send, Eraser, PenLine } from "lucide-react";
 
 interface FormActionsProps {
 	postContentLength: number;
@@ -17,19 +18,24 @@ const FormActions: React.FC<FormActionsProps> = ({
 	tagErrors,
 	content,
 }) => {
+	const [open, setOpen] = useState(false);
+
 	return (
 		<div className="flex w-auto flex-col items-center">
-			<Button
-				className="w-full"
-				variant="neutral"
-				onClick={(e) => {
-					e.preventDefault();
-				}}
-			>
-				<div className="text-sm">
-					{postContentLength}/{maxContentLength}
-				</div>
-			</Button>
+			<Popover open={open} onOpenChange={setOpen}>
+				<PopoverTrigger asChild>
+					<Button variant="neutral" className="w-full">
+						<div className="text-sm">
+							{postContentLength}/{maxContentLength}
+						</div>
+					</Button>
+				</PopoverTrigger>
+				<PopoverContent>
+					<div className="flex gap-1 items-center">
+						<PenLine /> <p>{maxContentLength - postContentLength} character{maxContentLength - postContentLength === 1 ? "" : "s"} left</p>
+					</div>
+				</PopoverContent>
+			</Popover>
 			<div className="flex gap-2 mt-2">
 				<Button
 					type="submit"
