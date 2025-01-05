@@ -1,6 +1,6 @@
 import React from "react";
-import { Card, CardHeader } from "./ui/card";
-import PostVote from "./PostVote";
+import { Card, CardHeader } from "@/components/ui/card";
+import PostVote from "@/components/post/PostVote";
 
 interface PostErrorProps {
 	message: string;

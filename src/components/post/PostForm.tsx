@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Textarea } from "./ui/textarea"; // Import the Textarea component
-import { Card, CardFooter, CardHeader } from "./ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea"; // Import the Textarea component
+import { Card, CardFooter, CardHeader } from "@/components/ui/card";
 import { Plus } from "lucide-react";
-import PostFormAction from "./PostFormAction";
+import PostFormAction from "@/components/post/PostFormAction";
 
 const POST_SETTING_NEW_TAG_LIMIT = 5;
 const POST_SETTING_MAX_CONTENT_LENGTH = 300;
@@ -33,12 +33,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 		setPostContentLength(0);
 		setTagInputs([]);
 		setTagErrors([]);
-	}, [
-		setContent,
-		setPostContentLength,
-		setTagInputs,
-		setTagErrors,
-	]);
+	}, [setContent, setPostContentLength, setTagInputs, setTagErrors]);
 
 	useEffect(() => {
 		if (!isFormVisible) {

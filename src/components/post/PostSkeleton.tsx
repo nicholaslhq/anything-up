@@ -1,7 +1,7 @@
 import React from "react";
-import { Card, CardHeader, CardFooter } from "./ui/card";
-import { Skeleton } from "./ui/skeleton";
-import PostVote from "./PostVote";
+import { Card, CardHeader, CardFooter } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import PostVote from "@/components/post/PostVote";
 
 const PostSkeleton: React.FC = () => {
 	return (

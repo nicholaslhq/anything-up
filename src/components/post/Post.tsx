@@ -1,7 +1,7 @@
 import React from "react";
-import { Card, CardHeader, CardFooter } from "./ui/card";
-import PostTags from "./PostTags";
-import PostVote from "./PostVote";
+import { Card, CardHeader, CardFooter } from "@/components/ui/card";
+import PostTags from "@/components/post/PostTags";
+import PostVote from "@/components/post/PostVote";
 
 export interface Post {
 	id: string;

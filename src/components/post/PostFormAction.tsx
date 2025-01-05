@@ -1,6 +1,10 @@
 import React, { useState } from "react";
-import { Button } from "./ui/button";
-import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover";
+import { Button } from "@/components/ui/button";
+import {
+	Popover,
+	PopoverTrigger,
+	PopoverContent,
+} from "@/components/ui/popover";
 import { Send, Eraser, PenLine } from "lucide-react";
 
 interface PostFormActionProps {
@@ -32,7 +36,14 @@ const PostFormAction: React.FC<PostFormActionProps> = ({
 				</PopoverTrigger>
 				<PopoverContent>
 					<div className="flex gap-1 items-center">
-						<PenLine /> <p>{maxContentLength - postContentLength} character{maxContentLength - postContentLength === 1 ? "" : "s"} left</p>
+						<PenLine />{" "}
+						<p>
+							{maxContentLength - postContentLength} character
+							{maxContentLength - postContentLength === 1
+								? ""
+								: "s"}{" "}
+							left
+						</p>
 					</div>
 				</PopoverContent>
 			</Popover>

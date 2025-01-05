@@ -5,8 +5,8 @@ import {
 	MenubarItem,
 	MenubarMenu,
 	MenubarTrigger,
-} from "./ui/menubar";
-import ThemeSwitcher from "./ThemeSwitcher";
+} from "@/components/ui/menubar";
+import ThemeSwitcher from "@/components/ThemeSwitcher";
 import { ArrowBigUp, ArrowBigUpDash, Flame, Zap, Trophy } from "lucide-react";
 
 interface NavigationBarProps {

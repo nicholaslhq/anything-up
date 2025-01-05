@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import PostForm from "../components/PostForm";
-import UserIdentifier from "../components/UserIdentifier";
-import NavigationBar from "../components/NavigationBar";
-import PostComponent from "../components/Post";
-import PostStatus from "../components/PostStatus";
+import PostForm from "@/components/post/PostForm";
+import UserIdentifier from "@/components/UserIdentifier";
+import NavigationBar from "@/components/NavigationBar";
+import PostComponent from "@/components/post/Post";
+import PostStatus from "@/components/post/PostStatus";
 
 const POST_SETTING_LOADING_TIMEOUT = 5000;
 

@@ -1,6 +1,10 @@
 import React, { useState } from "react";
-import { Button } from "./ui/button";
-import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover";
+import { Button } from "@/components/ui/button";
+import {
+	Popover,
+	PopoverTrigger,
+	PopoverContent,
+} from "@/components/ui/popover";
 import { ArrowBigUp, ArrowBigDown, Hourglass } from "lucide-react";
 
 interface PostVoteCountProps {
@@ -31,7 +35,8 @@ const PostVoteCount: React.FC<PostVoteCountProps> = ({
 					<ArrowBigDown /> {downVotes}
 				</div>
 				<div className="flex gap-1 items-center [&_svg]:p-1">
-					<Hourglass /> {expiresInDays} day{expiresInDays === 1 ? "" : "s"}
+					<Hourglass /> {expiresInDays} day
+					{expiresInDays === 1 ? "" : "s"}
 				</div>
 			</PopoverContent>
 		</Popover>

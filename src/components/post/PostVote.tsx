@@ -1,8 +1,8 @@
 import React from "react";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import { ArrowBigUp, ArrowBigDown, Frown, Annoyed } from "lucide-react";
-import PostVoteCount from "./PostVoteCount";
-import { Skeleton } from "./ui/skeleton";
+import PostVoteCount from "@/components/post/PostVoteCount";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PostVoteProps {
 	postId: string;
@@ -14,7 +14,7 @@ interface PostVoteProps {
 	handleDownvote: (postId: string) => void;
 	loading?: boolean;
 	error?: boolean;
-  	empty?: boolean;
+	empty?: boolean;
 }
 
 const PostVote: React.FC<PostVoteProps> = ({
