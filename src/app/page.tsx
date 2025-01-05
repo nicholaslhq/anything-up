@@ -170,7 +170,7 @@ export default function Home() {
           handleSubmit={handleSubmit}
           content={content}
           setContent={setContent}
-          isVisible={isFormVisible}
+          isFormVisible={isFormVisible}
           setIsFormVisible={setIsFormVisible}
         />
         {loading ? (
