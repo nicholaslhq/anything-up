@@ -28,19 +28,13 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 	const [tagInputs, setTagInputs] = useState<string[]>([]);
 	const [tagErrors, setTagErrors] = useState<string[]>([]);
 
-	const textareaRef = useRef<HTMLTextAreaElement>(null);
-
 	const clearForm = React.useCallback(() => {
 		setContent("");
-		if (textareaRef.current) {
-			textareaRef.current.value = "";
-		}
 		setPostContentLength(0);
 		setTagInputs([]);
 		setTagErrors([]);
 	}, [
 		setContent,
-		textareaRef,
 		setPostContentLength,
 		setTagInputs,
 		setTagErrors,
@@ -91,9 +85,6 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 			.filter((tag) => tag !== "");
 		const uniqueTagsToAdd = [...new Set(tagsToAdd)]; // Eliminate duplicates
 		await handleSubmit(event, uniqueTagsToAdd);
-		if (textareaRef.current) {
-			textareaRef.current.value = "";
-		}
 		setContent("");
 		setPostContentLength(0);
 		setTagInputs([]);
@@ -142,7 +133,6 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 						autoExpand
 						minHeight={40}
 						maxHeight={200}
-						ref={textareaRef}
 					/>
 				</CardHeader>
 				<CardFooter>
