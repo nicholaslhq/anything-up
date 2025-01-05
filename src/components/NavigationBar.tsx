@@ -7,7 +7,7 @@ import {
 	MenubarTrigger,
 } from "./ui/menubar";
 import ThemeSwitcher from "./ThemeSwitcher";
-import { Plus, X } from "lucide-react";
+import { ArrowBigUp, ArrowBigUpDash, Flame, Zap, Trophy } from "lucide-react";
 
 interface NavigationBarProps {
 	sortBy: string;
@@ -37,7 +37,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 						}
 					}}
 				>
-					{isFormVisible ? <X /> : <Plus />}
+					{isFormVisible ? <ArrowBigUpDash /> : <ArrowBigUp />}
 				</MenubarTrigger>
 			</MenubarMenu>
 			<MenubarMenu>
@@ -45,7 +45,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 					className={sortBy === "hot" ? "border-2 border-black" : ""}
 					onClick={() => setSortBy("hot")}
 				>
-					Hot
+					<Flame />
 				</MenubarTrigger>
 			</MenubarMenu>
 			<MenubarMenu>
@@ -53,7 +53,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 					className={sortBy === "new" ? "border-2 border-black" : ""}
 					onClick={() => setSortBy("new")}
 				>
-					New
+					<Zap />
 				</MenubarTrigger>
 			</MenubarMenu>
 			<MenubarMenu>
@@ -61,7 +61,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 					className={sortBy === "top" ? "border-2 border-black" : ""}
 					onClick={() => setSortBy("top")}
 				>
-					Top
+					<Trophy />
 				</MenubarTrigger>
 				{sortBy === "top" && (
 					<MenubarContent>
