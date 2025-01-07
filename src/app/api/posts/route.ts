@@ -1,6 +1,6 @@
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { Prisma, Post } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 const POST_SETTING_DEFAULT_EXPIRATION_DAYS = 30;
 
@@ -49,8 +49,8 @@ export async function GET(request: Request) {
   const timePeriod = searchParams.get('timePeriod');
 
   try {
-    let orderBy = {};
-    let where = {};
+    let orderBy: Prisma.PostOrderByWithRelationInput = {};
+    let where: Prisma.PostWhereInput = {};
 
     if (sortBy === 'new') {
       orderBy = { createdAt: 'desc' };
@@ -87,11 +87,15 @@ export async function GET(request: Request) {
     const posts = await prisma.post.findMany({
       orderBy,
       where,
+      include: {
+        tags: true,
+      },
     });
 
     const postsWithDetails = await Promise.all(
-      posts.map(async (post: Post) => ({
+      posts.map(async (post) => ({
         ...post,
+        tags: post.tags.map(tag => tag.name),
         upVotes: await prisma.vote.count({
           where: {
             postId: post.id,
