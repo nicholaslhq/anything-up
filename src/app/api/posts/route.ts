@@ -1,6 +1,6 @@
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { Prisma } from '@prisma/client';
+import { Prisma, Post } from '@prisma/client';
 
 const POST_SETTING_DEFAULT_EXPIRATION_DAYS = 30;
 
@@ -24,13 +24,16 @@ export async function POST(request: Request) {
     const post = await prisma.post.create({
       data: {
         content,
-        tags: filteredTags,
+        tags: {
+          connectOrCreate: filteredTags.map((tag: string) => ({
+            where: { name: tag },
+            create: { name: tag }
+          }))
+        },
         createdAt: now,
         updatedAt: now,
         expiredAt,
-        status: 'active',
-        votes: 0,
-      } as Prisma.PostCreateInput, // Use Prisma.PostCreateInput
+      } as Prisma.PostCreateInput,
     });
 
     return NextResponse.json(post, { status: 201 });
@@ -52,7 +55,11 @@ export async function GET(request: Request) {
     if (sortBy === 'new') {
       orderBy = { createdAt: 'desc' };
     } else if (sortBy === 'top') {
-      orderBy = { votes: 'desc' };
+      orderBy = {
+        votes: {
+          _count: 'desc',
+        },
+      };
       if (timePeriod === 'day') {
         const oneDayAgo = new Date();
         oneDayAgo.setDate(oneDayAgo.getDate() - 1);
@@ -67,7 +74,11 @@ export async function GET(request: Request) {
         where = { createdAt: { gte: oneMonthAgo } };
       }
     } else if (sortBy === 'hot') {
-      orderBy = { votes: 'desc' }; // Sort by votes
+      orderBy = {
+        votes: {
+          _count: 'desc',
+        },
+      };
       const oneDayAgo = new Date();
       oneDayAgo.setDate(oneDayAgo.getDate() - 1);
       where = { createdAt: { gte: oneDayAgo } }; // Filter by recent posts (last day)
@@ -79,22 +90,22 @@ export async function GET(request: Request) {
     });
 
     const postsWithDetails = await Promise.all(
-      posts.map(async (post) => ({
+      posts.map(async (post: Post) => ({
         ...post,
         upVotes: await prisma.vote.count({
           where: {
             postId: post.id,
-            type: 'up',
+            type: 'UPVOTE',
           },
         }),
         downVotes: await prisma.vote.count({
           where: {
             postId: post.id,
-            type: 'down',
+            type: 'DOWNVOTE',
           },
         }),
         expiresInDays: Math.ceil(
-          (post.expiredAt.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+          (post.expiredAt!.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
         ),
       }))
     );

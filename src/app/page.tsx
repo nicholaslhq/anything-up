@@ -175,7 +175,7 @@ export default function Home() {
           isFormVisible={isFormVisible}
           setIsFormVisible={setIsFormVisible}
         />
-        {loading ? (
+        {error || loading || empty ? (
           <PostStatus error={error} loading={loading} empty={empty} />
         ) : (
           posts.map((post) => (

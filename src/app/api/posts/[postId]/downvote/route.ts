@@ -1,17 +1,17 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma, VoteType } from '@prisma/client';
 import { cookies } from 'next/headers';
 
 const prisma = new PrismaClient();
 
 const POST_SETTING_DEFAULT_EXPIRATION_DAYS = 30;
 
-export async function POST(request: Request, { params }: { params: { postId: string } }) {
-  const { postId } = params;
+export async function POST(request: Request, context: { params: { postId: string } }) {
+  const { postId } = await context.params;
   const cookieStore = await cookies();
-  const thumbmark = cookieStore.get('thumbmark')?.value;
+  const userId = cookieStore.get('userId')?.value;
 
-  if (!thumbmark) {
-    return new Response(JSON.stringify({ error: 'Thumbmark not found' }), {
+  if (!userId) {
+    return new Response(JSON.stringify({ error: 'userId not found' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });
@@ -21,7 +21,7 @@ export async function POST(request: Request, { params }: { params: { postId: str
     const existingVote = await prisma.vote.findFirst({
       where: {
         postId: postId,
-        thumbmark: thumbmark,
+        userId: userId,
       },
     });
 
@@ -29,7 +29,7 @@ export async function POST(request: Request, { params }: { params: { postId: str
     expirationDate.setDate(expirationDate.getDate() + POST_SETTING_DEFAULT_EXPIRATION_DAYS);
 
     if (existingVote) {
-      if (existingVote.type === 'downvote') {
+      if (existingVote.type === VoteType.DOWNVOTE) {
         await prisma.vote.delete({
           where: {
             id: existingVote.id,
@@ -38,7 +38,6 @@ export async function POST(request: Request, { params }: { params: { postId: str
         await prisma.post.update({
           where: { id: postId },
           data: {
-            votes: { increment: 1 },
             expiredAt: expirationDate,
           } as Prisma.PostUpdateInput,
         });
@@ -46,7 +45,7 @@ export async function POST(request: Request, { params }: { params: { postId: str
           status: 200,
           headers: { 'Content-Type': 'application/json' },
         });
-      } else if (existingVote.type === 'upvote') {
+      } else if (existingVote.type === VoteType.UPVOTE) {
         await prisma.vote.delete({
           where: {
             id: existingVote.id,
@@ -55,14 +54,13 @@ export async function POST(request: Request, { params }: { params: { postId: str
         await prisma.vote.create({
           data: {
             postId: postId,
-            thumbmark: thumbmark,
-            type: 'downvote',
+            userId: userId,
+            type: VoteType.DOWNVOTE,
           },
         });
         await prisma.post.update({
           where: { id: postId },
           data: {
-            votes: { decrement: 2 }, // Decrement by 2 because we're going from +1 to -1
             expiredAt: expirationDate,
           } as Prisma.PostUpdateInput,
         });
@@ -75,14 +73,13 @@ export async function POST(request: Request, { params }: { params: { postId: str
       await prisma.vote.create({
         data: {
           postId: postId,
-          thumbmark: thumbmark,
-          type: 'downvote',
+          userId: userId,
+          type: VoteType.DOWNVOTE,
         },
       });
       await prisma.post.update({
         where: { id: postId },
         data: {
-          votes: { decrement: 1 },
           expiredAt: expirationDate,
         } as Prisma.PostUpdateInput,
       });

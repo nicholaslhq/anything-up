@@ -4,12 +4,12 @@ import { getFingerprint } from '@thumbmarkjs/thumbmarkjs';
 
 const UserIdentifier = () => {
   useEffect(() => {
-    const setThumbmarkCookie = async () => {
-      const thumbmark = await getFingerprint();
-      document.cookie = `thumbmark=${thumbmark}; path=/; max-age=31536000`; // Set cookie for 1 year
+    const setUserIdCookie = async () => {
+      const userId = await getFingerprint();
+      document.cookie = `userId=${userId}; path=/; max-age=31536000`; // Set cookie for 1 year
     };
 
-    setThumbmarkCookie();
+    setUserIdCookie();
   }, []);
 
   return null; // This component doesn't need to render anything
