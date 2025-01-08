@@ -9,6 +9,7 @@ export interface Post {
 	upVotes: number;
 	downVotes: number;
 	expiresInDays: number;
+	userVote: 'UPVOTE' | 'DOWNVOTE' | null;
 	tags?: string[];
 }
 
@@ -16,14 +17,12 @@ interface PostProps {
 	post: Post;
 	handleUpvote: (postId: string) => Promise<void>;
 	handleDownvote: (postId: string) => Promise<void>;
-	votedPosts: { [postId: string]: "up" | "down" | null };
 }
 
 const Post: React.FC<PostProps> = ({
 	post,
 	handleUpvote,
 	handleDownvote,
-	votedPosts,
 }) => {
 	return (
 		<div
@@ -42,7 +41,7 @@ const Post: React.FC<PostProps> = ({
 				postId={post.id}
 				handleUpvote={handleUpvote}
 				handleDownvote={handleDownvote}
-				votedPosts={votedPosts}
+				userVote={post.userVote}
 				upVotes={post.upVotes}
 				downVotes={post.downVotes}
 				expiresInDays={post.expiresInDays}

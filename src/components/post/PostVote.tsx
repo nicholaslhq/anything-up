@@ -9,7 +9,7 @@ interface PostVoteProps {
 	upVotes: number;
 	downVotes: number;
 	expiresInDays: number;
-	votedPosts: { [postId: string]: "up" | "down" | null };
+	userVote: 'UPVOTE' | 'DOWNVOTE' | null;
 	handleUpvote: (postId: string) => void;
 	handleDownvote: (postId: string) => void;
 	loading?: boolean;
@@ -22,7 +22,7 @@ const PostVote: React.FC<PostVoteProps> = ({
 	upVotes,
 	downVotes,
 	expiresInDays,
-	votedPosts,
+	userVote,
 	handleUpvote,
 	handleDownvote,
 	loading = false,
@@ -52,9 +52,7 @@ const PostVote: React.FC<PostVoteProps> = ({
 			)}
 			<div className="flex gap-2 mt-2">
 				<Button
-					variant={
-						votedPosts[postId] === "up" ? "default" : "neutral"
-					}
+					variant={userVote === "UPVOTE" ? "default" : "neutral"}
 					onClick={() => handleUpvote(postId)}
 					size={"icon"}
 					disabled={loading || error || empty}
@@ -62,9 +60,7 @@ const PostVote: React.FC<PostVoteProps> = ({
 					<ArrowBigUp />
 				</Button>
 				<Button
-					variant={
-						votedPosts[postId] === "down" ? "default" : "neutral"
-					}
+					variant={userVote === "DOWNVOTE" ? "default" : "neutral"}
 					onClick={() => handleDownvote(postId)}
 					size={"icon"}
 					disabled={loading || error || empty}

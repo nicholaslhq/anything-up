@@ -6,7 +6,7 @@ import UserIdentifier from "@/components/UserIdentifier";
 import NavigationBar from "@/components/NavigationBar";
 import PostComponent from "@/components/post/Post";
 import PostStatus from "@/components/post/PostStatus";
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast";
 
 const POST_SETTING_LOADING_TIMEOUT = 5000;
 
@@ -22,6 +22,7 @@ export interface Post {
   upVotes: number;
   downVotes: number;
   expiresInDays: number;
+  userVote: 'UPVOTE' | 'DOWNVOTE' | null;
 }
 
 export default function Home() {
@@ -30,15 +31,21 @@ export default function Home() {
   const [empty, setEmpty] = useState(false);
   const [content, setContent] = useState("");
   const [isFormVisible, setIsFormVisible] = useState(false);
-  const [votedPosts, setVotedPosts] = useState<{
-    [postId: string]: "up" | "down" | null;
-  }>({});
   const [sortBy, setSortBy] = useState("hot"); // Default sort
   const [timePeriod, setTimePeriod] = useState("day");
   const [error, setError] = useState<string | null>(null);
+  const [isUserIdAvailable, setIsUserIdAvailable] = useState(false);
   const { toast } = useToast()
 
   useEffect(() => {
+    setIsUserIdAvailable(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isUserIdAvailable) {
+      return;
+    }
+
     const fetchPosts = async () => {
       setLoading(true);
       setError(null);
@@ -72,60 +79,40 @@ export default function Home() {
     };
 
     fetchPosts();
-  }, [sortBy, timePeriod]);
+  }, [sortBy, timePeriod, isUserIdAvailable]);
 
   const handleUpvote = async (postId: string) => {
-    const currentVote = votedPosts[postId];
     await fetch(`/api/posts/${postId}/upvote`, { method: "POST" });
     setPosts((prevPosts) =>
       prevPosts.map((post) => {
         if (post.id === postId) {
-          if (currentVote === "up") {
-            return { ...post, upVotes: post.upVotes - 1 };
-          } else if (currentVote === "down") {
-            return {
-              ...post,
-              downVotes: post.downVotes - 1,
-              upVotes: post.upVotes + 1,
-            };
-          } else {
-            return { ...post, upVotes: post.upVotes + 1 };
-          }
+          return {
+            ...post,
+            userVote: post.userVote === "UPVOTE" ? null : "UPVOTE",
+            upVotes: post.userVote === "UPVOTE" ? post.upVotes - 1 : post.userVote === "DOWNVOTE" ? post.upVotes + 1 : post.upVotes + 1,
+            downVotes: post.userVote === "DOWNVOTE" ? post.downVotes - 1 : post.downVotes,
+          };
         }
         return post;
       })
     );
-    setVotedPosts((prev) => ({
-      ...prev,
-      [postId]: currentVote === "up" ? null : "up",
-    }));
   };
 
   const handleDownvote = async (postId: string) => {
-    const currentVote = votedPosts[postId];
     await fetch(`/api/posts/${postId}/downvote`, { method: "POST" });
     setPosts((prevPosts) =>
       prevPosts.map((post) => {
         if (post.id === postId) {
-          if (currentVote === "down") {
-            return { ...post, downVotes: post.downVotes - 1 };
-          } else if (currentVote === "up") {
-            return {
-              ...post,
-              upVotes: post.upVotes - 1,
-              downVotes: post.downVotes + 1,
-            };
-          } else {
-            return { ...post, downVotes: post.downVotes + 1 };
-          }
+          return {
+            ...post,
+            userVote: post.userVote === "DOWNVOTE" ? null : "DOWNVOTE",
+            downVotes: post.userVote === "DOWNVOTE" ? post.downVotes - 1 : post.userVote === "UPVOTE" ? post.downVotes + 1 : post.downVotes + 1,
+            upVotes: post.userVote === "UPVOTE" ? post.upVotes - 1 : post.upVotes,
+          };
         }
         return post;
       })
     );
-    setVotedPosts((prev) => ({
-      ...prev,
-      [postId]: currentVote === "down" ? null : "down",
-    }));
   };
 
   const handleSubmit = async (event: React.FormEvent, tags: string[]) => {
@@ -184,7 +171,6 @@ export default function Home() {
                 post={post}
                 handleUpvote={handleUpvote}
                 handleDownvote={handleDownvote}
-                votedPosts={votedPosts}
               />
             </div>
           ))
