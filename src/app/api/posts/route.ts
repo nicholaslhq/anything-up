@@ -95,7 +95,16 @@ export async function GET(request: Request) {
 			retrospective.setDate(
 				retrospective.getDate() - HOT_SORT_RETROSPECTIVE_DAYS
 			);
-			where = { createdAt: { gte: retrospective } };
+			where = {
+				createdAt: { gte: retrospective },
+				votes: {
+					some: {
+						createdAt: {
+							gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
+						},
+					},
+				},
+			};
 		}
 
 		const posts = await prisma.post.findMany({
