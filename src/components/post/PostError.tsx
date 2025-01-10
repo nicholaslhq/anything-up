@@ -18,13 +18,13 @@ const PostError: React.FC<PostErrorProps> = ({ message }) => {
 				postId="error"
 				handleUpvote={() => {}}
 				handleDownvote={() => {}}
-				votedPosts={{}}
 				upVotes={0}
 				downVotes={0}
 				expiresInDays={0}
 				loading={false}
 				error={true}
 				empty={false}
+				userVote={null}
 			/>
 		</div>
 	);
