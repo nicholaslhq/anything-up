@@ -7,6 +7,7 @@ import { Plus } from "lucide-react";
 import PostFormAction from "@/components/post/PostFormAction";
 
 const POST_SETTING_NEW_TAG_LIMIT = 5;
+const POST_SETTING_MAX_TAG_LENGTH = 20;
 const POST_SETTING_MAX_CONTENT_LENGTH = 300;
 
 interface PostSubmissionFormProps {
@@ -62,6 +63,9 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 	const handleTagInputChange = (index: number, value: string) => {
 		const newTagInputs = [...tagInputs];
 		const newTagErrors = [...tagErrors];
+		if (value.length > POST_SETTING_MAX_TAG_LENGTH) {
+			return;
+		}
 		const regex = /[^a-zA-Z0-9]/g;
 		if (regex.test(value)) {
 			newTagErrors[index] = "Only alphanumeric characters are allowed.";
@@ -151,12 +155,14 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 											tagErrors[index] ? "bg-red-300" : ""
 										}`}
 										value={tagInput}
-										onChange={(e) =>
-											handleTagInputChange(
-												index,
-												e.target.value
-											)
-										}
+										onChange={(e) => {
+											if (e.target.value.length <= POST_SETTING_MAX_TAG_LENGTH) {
+												handleTagInputChange(
+													index,
+													e.target.value
+												);
+											}
+										}}
 									/>
 								</div>
 							))}

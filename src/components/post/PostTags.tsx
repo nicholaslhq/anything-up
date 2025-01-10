@@ -33,8 +33,9 @@ const PostTags: React.FC<PostTagsProps> = ({
 											: "neutral"
 									}
 									onClick={() => onTagClick(tag)}
+									prefix="#"
 								>
-									<span>#{tag}</span>
+									<span>{tag}</span>
 								</Button>
 						  ))
 						: tags
@@ -52,8 +53,9 @@ const PostTags: React.FC<PostTagsProps> = ({
 												: "neutral"
 										}
 										onClick={() => onTagClick(tag)}
+										prefix="#"
 									>
-										<span>#{tag}</span>
+										<span>{tag}</span>
 									</Button>
 								))}
 					{tags.length > POST_SETTING_INITIAL_TAG_DISPLAY_LIMIT && (
