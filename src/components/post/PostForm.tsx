@@ -152,7 +152,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 										placeholder="Tag"
 										prefix="#"
 										className={`w-24 ${
-											tagErrors[index] ? "bg-red-300" : ""
+											tagErrors[index] ? "bg-red-300 dark:bg-red-800" : ""
 										}`}
 										value={tagInput}
 										onChange={(e) => {

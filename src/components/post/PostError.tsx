@@ -9,7 +9,7 @@ interface PostErrorProps {
 const PostError: React.FC<PostErrorProps> = ({ message }) => {
 	return (
 		<div className="flex gap-3 md:gap-5 w-full sm:max-w-lg">
-			<Card className="flex-1 bg-red-300">
+			<Card className="flex-1 bg-red-300 dark:bg-red-800">
 				<CardHeader>
 					<p>Error: {message}</p>
 				</CardHeader>
