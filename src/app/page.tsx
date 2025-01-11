@@ -32,6 +32,7 @@ export default function Home() {
 	const [content, setContent] = useState("");
 	const [isFormVisible, setIsFormVisible] = useState(false);
 	const [sortBy, setSortBy] = useState("hot"); // Default sort
+	const [refreshPosts, setRefreshPosts] = useState(false);
 	const [timePeriod, setTimePeriod] = useState("day");
 	const [error, setError] = useState<string | null>(null);
 	const [isUserIdAvailable, setIsUserIdAvailable] = useState(false);
@@ -78,7 +79,7 @@ export default function Home() {
 		};
 
 		fetchPosts();
-	}, [sortBy, timePeriod, isUserIdAvailable]);
+	}, [sortBy, timePeriod, isUserIdAvailable, refreshPosts]);
 
 	const handleUpvote = async (postId: string) => {
 		await fetch(`/api/posts/${postId}/upvote`, { method: "POST" });
@@ -182,6 +183,8 @@ export default function Home() {
 					setSortBy={setSortBy}
 					timePeriod={timePeriod}
 					setTimePeriod={setTimePeriod}
+					refreshPosts={refreshPosts}
+					setRefreshPosts={setRefreshPosts}
 					isFormVisible={isFormVisible}
 					setIsFormVisible={setIsFormVisible}
 				/>

@@ -16,6 +16,8 @@ interface NavigationBarProps {
 	setTimePeriod: (timePeriod: string) => void;
 	isFormVisible: boolean;
 	setIsFormVisible: React.Dispatch<React.SetStateAction<boolean>>;
+	refreshPosts: boolean;
+	setRefreshPosts: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const NavigationBar: React.FC<NavigationBarProps> = ({
@@ -25,6 +27,8 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 	setTimePeriod,
 	isFormVisible,
 	setIsFormVisible,
+	refreshPosts,
+	setRefreshPosts,
 }) => {
 	return (
 		<Menubar>
@@ -43,7 +47,13 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 			<MenubarMenu>
 				<MenubarTrigger
 					className={sortBy === "hot" ? "border-2 border-black" : ""}
-					onClick={() => setSortBy("hot")}
+					onClick={() => {
+						if (sortBy === "hot") {
+							setRefreshPosts(!refreshPosts);
+						} else {
+							setSortBy("hot");
+						}
+					}}
 				>
 					<Flame />
 				</MenubarTrigger>
@@ -51,7 +61,13 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 			<MenubarMenu>
 				<MenubarTrigger
 					className={sortBy === "new" ? "border-2 border-black" : ""}
-					onClick={() => setSortBy("new")}
+					onClick={() => {
+						if (sortBy === "new") {
+							setRefreshPosts(!refreshPosts);
+						} else {
+							setSortBy("new");
+						}
+					}}
 				>
 					<Zap />
 				</MenubarTrigger>
@@ -59,7 +75,13 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 			<MenubarMenu>
 				<MenubarTrigger
 					className={sortBy === "top" ? "border-2 border-black" : ""}
-					onClick={() => setSortBy("top")}
+					onClick={() => {
+						if (sortBy === "top") {
+							setRefreshPosts(!refreshPosts);
+						} else {
+							setSortBy("top");
+						}
+					}}
 				>
 					<Trophy />
 				</MenubarTrigger>
