@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -5,12 +7,14 @@ import {
 	PopoverTrigger,
 	PopoverContent,
 } from "@/components/ui/popover";
-import { ArrowBigUp, ArrowBigDown, Hourglass } from "lucide-react";
+import { ArrowBigUp, ArrowBigDown, Hourglass, Share2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface PostVoteCountProps {
 	upVotes: number;
 	downVotes: number;
 	expiresInDays: number;
+	postUrl: string;
 }
 
 const formatCount = (count: number): string => {
@@ -31,12 +35,22 @@ const PostVoteCount: React.FC<PostVoteCountProps> = ({
 	upVotes,
 	downVotes,
 	expiresInDays,
+	postUrl,
 }) => {
 	const [open, setOpen] = useState(false);
 	const voteCount = upVotes - downVotes;
 	const formattedVoteCount = formatCount(voteCount);
 	const formattedUpVotes = formatCount(upVotes);
 	const formattedDownVotes = formatCount(downVotes);
+	const { toast } = useToast();
+
+	const handleShare = () => {
+		navigator.clipboard.writeText(postUrl);
+		toast({
+			title: "Link copied!",
+			description: "Share this link with others.",
+		});
+	};
 
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
@@ -55,6 +69,12 @@ const PostVoteCount: React.FC<PostVoteCountProps> = ({
 				<div className="flex gap-1 items-center [&_svg]:p-1">
 					<Hourglass /> {expiresInDays} day
 					{expiresInDays === 1 ? "" : "s"}
+				</div>
+				<div
+					className="flex gap-1 items-center [&_svg]:p-1 cursor-pointer hover:underline"
+					onClick={handleShare}
+				>
+					<Share2 /> Copy link
 				</div>
 			</PopoverContent>
 		</Popover>

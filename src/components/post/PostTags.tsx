@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { Post } from "@/components/post/Post";
 import { Button } from "@/components/ui/button";

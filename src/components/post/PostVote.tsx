@@ -9,7 +9,7 @@ interface PostVoteProps {
 	upVotes: number;
 	downVotes: number;
 	expiresInDays: number;
-	userVote: 'UPVOTE' | 'DOWNVOTE' | null;
+	userVote: "UPVOTE" | "DOWNVOTE" | null;
 	handleUpvote: (postId: string) => void;
 	handleDownvote: (postId: string) => void;
 	loading?: boolean;
@@ -29,6 +29,8 @@ const PostVote: React.FC<PostVoteProps> = ({
 	error = false,
 	empty = false,
 }) => {
+	const postUrl = `${window.location.origin}/posts/${postId}`;
+
 	return (
 		<div className="flex w-auto flex-col items-center">
 			{loading ? (
@@ -48,6 +50,7 @@ const PostVote: React.FC<PostVoteProps> = ({
 					upVotes={upVotes}
 					downVotes={downVotes}
 					expiresInDays={expiresInDays}
+					postUrl={postUrl}
 				/>
 			)}
 			<div className="flex flex-col sm:flex-row gap-2 mt-2">
