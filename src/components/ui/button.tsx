@@ -53,7 +53,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 				{...props}
 			>
 				{prefix && (
-					<div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-text">
+					<div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm">
 						{prefix}
 					</div>
 				)}
