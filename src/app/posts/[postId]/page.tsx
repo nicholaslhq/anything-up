@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import UserIdentifier from "@/components/UserIdentifier";
+import Title from "@/components/Title";
 import PostComponent, { Post as PostType } from "@/components/post/Post";
 import PostStatus from "@/components/post/PostStatus";
 import { useParams } from "next/navigation";
@@ -109,20 +110,21 @@ export default function PostDetailPage() {
 		<div className="min-h-screen p-4 sm:p-10 font-[family-name:var(--font-geist-sans)]">
 			<main className="flex flex-col gap-8 md:gap-10 items-center">
 				<UserIdentifier />
-				<h1 className="text-2xl font-bold text-text">AnythingUp</h1>
+				<Title />
 				{error || loading ? (
 					<PostStatus error={error} loading={loading} empty={false} />
-				) : null}
-				{post && (
-					<div key={post?.id} className="flex w-full sm:max-w-lg">
-						<PostComponent
-							post={post}
-							handleUpvote={handleUpvote}
-							handleDownvote={handleDownvote}
-							onTagClick={() => {}}
-							selectedTag={null}
-						/>
-					</div>
+				) : (
+					post && (
+						<div key={post?.id} className="flex w-full sm:max-w-lg">
+							<PostComponent
+								post={post}
+								handleUpvote={handleUpvote}
+								handleDownvote={handleDownvote}
+								onTagClick={() => {}}
+								selectedTag={null}
+							/>
+						</div>
+					)
 				)}
 				{post && <PostFooter />}
 			</main>

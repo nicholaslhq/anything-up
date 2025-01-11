@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import PostForm from "@/components/post/PostForm";
 import UserIdentifier from "@/components/UserIdentifier";
 import NavigationBar from "@/components/NavigationBar";
+import Title from "@/components/Title";
 import PostComponent, { Post as PostType } from "@/components/post/Post";
 import PostStatus from "@/components/post/PostStatus";
 import PostFooter from "@/components/post/PostFooter";
@@ -177,7 +178,7 @@ export default function Home() {
 		<div className="min-h-screen p-4 sm:p-10 font-[family-name:var(--font-geist-sans)]">
 			<main className="flex flex-col gap-8 md:gap-10 items-center">
 				<UserIdentifier />
-				<h1 className="text-2xl font-bold text-text">AnythingUp</h1>
+				<Title setRefreshPosts={setRefreshPosts} />
 				<NavigationBar
 					sortBy={sortBy}
 					setSortBy={setSortBy}
@@ -206,7 +207,7 @@ export default function Home() {
 						</div>
 					))
 				)}
-				{filteredPosts.length > 0 && <PostFooter />}
+				{filteredPosts.length > 0 && !loading && <PostFooter />}
 			</main>
 		</div>
 	);
