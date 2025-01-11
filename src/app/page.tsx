@@ -6,6 +6,7 @@ import UserIdentifier from "@/components/UserIdentifier";
 import NavigationBar from "@/components/NavigationBar";
 import PostComponent, { Post as PostType } from "@/components/post/Post";
 import PostStatus from "@/components/post/PostStatus";
+import PostFooter from "@/components/post/PostFooter";
 import { useToast } from "@/hooks/use-toast";
 
 const POST_SETTING_LOADING_TIMEOUT = 5000;
@@ -210,6 +211,7 @@ export default function Home() {
 						</div>
 					))
 				)}
+				{filteredPosts.length > 0 && <PostFooter />}
 			</main>
 		</div>
 	);
