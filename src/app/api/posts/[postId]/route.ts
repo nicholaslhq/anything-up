@@ -10,11 +10,12 @@ interface Params {
 
 export async function GET(req: Request, { params }: Params) {
 	const userId = (await cookies()).get("userId")?.value;
+	const { postId } = await params;
 
 	try {
 		const post = await prisma.post.findUnique({
 			where: {
-				id: params.postId,
+				id: postId,
 			},
 			include: {
 				tags: true,
