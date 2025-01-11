@@ -29,8 +29,15 @@ const PostFormAction: React.FC<PostFormActionProps> = ({
 			<Popover open={open} onOpenChange={setOpen}>
 				<PopoverTrigger asChild>
 					<Button variant="neutral" className="w-full">
-						<div className="text-sm">
-							{postContentLength}/{maxContentLength}
+						<div className="text-sm text-center">
+							<div className="sm:hidden">
+								<p>{postContentLength}</p>
+								<hr className="border-black dark:border-white opacity-80" />
+								<p>{maxContentLength}</p>
+							</div>
+							<div className="hidden sm:flex">
+								<p>{postContentLength}/{maxContentLength}</p>
+							</div>
 						</div>
 					</Button>
 				</PopoverTrigger>
@@ -47,10 +54,10 @@ const PostFormAction: React.FC<PostFormActionProps> = ({
 					</div>
 				</PopoverContent>
 			</Popover>
-			<div className="flex gap-2 mt-2">
+			<div className="flex flex-col sm:flex-row gap-2 mt-2">
 				<Button
 					type="submit"
-					size="icon"
+					size="mobileIcon"
 					variant="neutral"
 					className="[&_svg]:size-5"
 					disabled={
@@ -62,7 +69,7 @@ const PostFormAction: React.FC<PostFormActionProps> = ({
 				</Button>
 				<Button
 					type="button"
-					size="icon"
+					size="mobileIcon"
 					variant="neutral"
 					className="[&_svg]:size-5"
 					onClick={(e) => {
