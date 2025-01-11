@@ -50,11 +50,11 @@ const PostVote: React.FC<PostVoteProps> = ({
 					expiresInDays={expiresInDays}
 				/>
 			)}
-			<div className="flex gap-2 mt-2">
+			<div className="flex flex-col sm:flex-row gap-2 mt-2">
 				<Button
 					variant={userVote === "UPVOTE" ? "default" : "neutral"}
 					onClick={() => handleUpvote(postId)}
-					size={"icon"}
+					size={"mobileIcon"}
 					disabled={loading || error || empty}
 				>
 					<ArrowBigUp />
@@ -62,7 +62,7 @@ const PostVote: React.FC<PostVoteProps> = ({
 				<Button
 					variant={userVote === "DOWNVOTE" ? "default" : "neutral"}
 					onClick={() => handleDownvote(postId)}
-					size={"icon"}
+					size={"mobileIcon"}
 					disabled={loading || error || empty}
 				>
 					<ArrowBigDown />
