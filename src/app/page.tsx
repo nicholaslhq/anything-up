@@ -31,7 +31,6 @@ export default function Home() {
 	const [loading, setLoading] = useState(false);
 	const [empty, setEmpty] = useState(false);
 	const [content, setContent] = useState("");
-	const [isFormVisible, setIsFormVisible] = useState(false);
 	const [sortBy, setSortBy] = useState("hot"); // Default sort
 	const [refreshPosts, setRefreshPosts] = useState(false);
 	const [timePeriod, setTimePeriod] = useState("day");
@@ -176,7 +175,7 @@ export default function Home() {
 
 	return (
 		<div className="min-h-screen p-4 sm:p-10 font-[family-name:var(--font-geist-sans)]">
-			<main className="flex flex-col gap-16 items-center">
+			<main className="flex flex-col gap-8 md:gap-10 items-center">
 				<UserIdentifier />
 				<h1 className="text-2xl font-bold text-text">AnythingUp</h1>
 				<NavigationBar
@@ -186,15 +185,11 @@ export default function Home() {
 					setTimePeriod={setTimePeriod}
 					refreshPosts={refreshPosts}
 					setRefreshPosts={setRefreshPosts}
-					isFormVisible={isFormVisible}
-					setIsFormVisible={setIsFormVisible}
 				/>
 				<PostForm
 					handleSubmit={handleSubmit}
 					content={content}
 					setContent={setContent}
-					isFormVisible={isFormVisible}
-					setIsFormVisible={setIsFormVisible}
 				/>
 				{error || loading || empty ? (
 					<PostStatus error={error} loading={loading} empty={empty} />

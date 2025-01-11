@@ -14,16 +14,12 @@ interface PostSubmissionFormProps {
 	handleSubmit: (event: React.FormEvent, tags: string[]) => Promise<void>;
 	content: string;
 	setContent: React.Dispatch<React.SetStateAction<string>>;
-	isFormVisible: boolean;
-	setIsFormVisible: (isVisible: boolean) => void;
 }
 
 const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 	handleSubmit,
 	content,
 	setContent,
-	isFormVisible,
-	setIsFormVisible,
 }) => {
 	const [postContentLength, setPostContentLength] = useState(0);
 	const [tagInputs, setTagInputs] = useState<string[]>([]);
@@ -37,10 +33,8 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 	}, [setContent, setPostContentLength, setTagInputs, setTagErrors]);
 
 	useEffect(() => {
-		if (!isFormVisible) {
-			clearForm();
-		}
-	}, [isFormVisible, clearForm]);
+		clearForm();
+	}, [clearForm]);
 
 	const tagInputRefs = useRef<HTMLInputElement[]>([]);
 
@@ -88,13 +82,8 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 		setPostContentLength(0);
 		setTagInputs([]);
 		setTagErrors([]);
-		setIsFormVisible(false);
 		window.scrollTo({ top: 0, behavior: "smooth" });
 	};
-
-	if (!isFormVisible) {
-		return null;
-	}
 
 	return (
 		<form

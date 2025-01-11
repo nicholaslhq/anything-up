@@ -7,15 +7,12 @@ import {
 	MenubarTrigger,
 } from "@/components/ui/menubar";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
-import { ArrowBigUp, ArrowBigUpDash, Flame, Zap, Trophy } from "lucide-react";
 
 interface NavigationBarProps {
 	sortBy: string;
 	setSortBy: (sortBy: string) => void;
 	timePeriod: string;
 	setTimePeriod: (timePeriod: string) => void;
-	isFormVisible: boolean;
-	setIsFormVisible: React.Dispatch<React.SetStateAction<boolean>>;
 	refreshPosts: boolean;
 	setRefreshPosts: React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -25,25 +22,11 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 	setSortBy,
 	timePeriod,
 	setTimePeriod,
-	isFormVisible,
-	setIsFormVisible,
 	refreshPosts,
 	setRefreshPosts,
 }) => {
 	return (
 		<Menubar>
-			<MenubarMenu>
-				<MenubarTrigger
-					onClick={() => {
-						setIsFormVisible(!isFormVisible);
-						if (!isFormVisible) {
-							window.scrollTo({ top: 0, behavior: 'smooth' });
-						}
-					}}
-				>
-					{isFormVisible ? <ArrowBigUpDash /> : <ArrowBigUp />}
-				</MenubarTrigger>
-			</MenubarMenu>
 			<MenubarMenu>
 				<MenubarTrigger
 					className={sortBy === "hot" ? "border-2 border-black" : ""}
@@ -55,7 +38,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 						}
 					}}
 				>
-					<Flame />
+					Hot
 				</MenubarTrigger>
 			</MenubarMenu>
 			<MenubarMenu>
@@ -69,7 +52,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 						}
 					}}
 				>
-					<Zap />
+					New
 				</MenubarTrigger>
 			</MenubarMenu>
 			<MenubarMenu>
@@ -83,7 +66,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 						}
 					}}
 				>
-					<Trophy />
+					Top
 				</MenubarTrigger>
 				{sortBy === "top" && (
 					<MenubarContent>
