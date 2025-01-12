@@ -178,7 +178,7 @@ export default function Home() {
 		<div className="min-h-screen p-4 sm:p-10 font-[family-name:var(--font-geist-sans)]">
 			<main className="flex flex-col gap-8 md:gap-10 items-center">
 				<UserIdentifier />
-				<Title setRefreshPosts={setRefreshPosts} />
+				<Title setRefreshPosts={setRefreshPosts} loading={loading} />
 				<NavigationBar
 					sortBy={sortBy}
 					setSortBy={setSortBy}
@@ -207,7 +207,7 @@ export default function Home() {
 						</div>
 					))
 				)}
-				{filteredPosts.length > 0 && !loading && <PostFooter />}
+				{filteredPosts.length > 0 && !error && !loading && !error && <PostFooter />}
 			</main>
 		</div>
 	);

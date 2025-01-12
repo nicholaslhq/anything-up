@@ -110,7 +110,7 @@ export default function PostDetailPage() {
 		<div className="min-h-screen p-4 sm:p-10 font-[family-name:var(--font-geist-sans)]">
 			<main className="flex flex-col gap-8 md:gap-10 items-center">
 				<UserIdentifier />
-				<Title />
+				<Title loading={loading} />
 				{error || loading ? (
 					<PostStatus error={error} loading={loading} empty={false} />
 				) : (
