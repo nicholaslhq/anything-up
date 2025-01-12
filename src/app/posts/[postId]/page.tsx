@@ -29,6 +29,7 @@ export default function PostDetailPage() {
 	const [post, setPost] = useState<PostType | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [expired, setExpired] = useState(false);
 	const { postId } = useParams();
 
 	useEffect(() => {
@@ -37,6 +38,7 @@ export default function PostDetailPage() {
 
 			setLoading(true);
 			setError(null);
+			setExpired(false);
 			const timeoutId = setTimeout(() => {
 				setError("Failed to load post. Please check your connection.");
 				setLoading(false);
@@ -46,6 +48,9 @@ export default function PostDetailPage() {
 				if (!res.ok) {
 					const message = `Failed to fetch post: ${res.status} ${res.statusText}`;
 					setError(message);
+					if (res.status === 404) {
+						setExpired(true);
+					}
 				} else {
 					const data: PostType = await res.json();
 					setPost(data);
@@ -111,8 +116,13 @@ export default function PostDetailPage() {
 			<main className="flex flex-col gap-8 md:gap-10 items-center">
 				<UserIdentifier />
 				<Title loading={loading} />
-				{error || loading ? (
-					<PostStatus error={error} loading={loading} empty={false} />
+				{error || loading || expired ? (
+					<PostStatus
+						error={null}
+						loading={loading}
+						empty={false}
+						expired={expired}
+					/>
 				) : (
 					post && (
 						<div key={post?.id} className="flex w-full sm:max-w-lg">

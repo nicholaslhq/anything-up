@@ -18,13 +18,14 @@ const PostSkeleton: React.FC = () => {
 				postId="loading"
 				handleUpvote={() => {}}
 				handleDownvote={() => {}}
-				votedPosts={{}}
+				userVote={null}
 				upVotes={0}
 				downVotes={0}
 				expiresInDays={0}
 				loading={true}
 				error={false}
 				empty={false}
+				expired={false}
 			/>
 		</div>
 	);

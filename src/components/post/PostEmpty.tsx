@@ -14,13 +14,14 @@ const PostEmpty = () => {
 				postId="empty"
 				handleUpvote={() => {}}
 				handleDownvote={() => {}}
-				votedPosts={{}}
+				userVote={null}
 				upVotes={0}
 				downVotes={0}
 				expiresInDays={0}
 				loading={false}
 				error={false}
 				empty={true}
+				expired={false}
 			/>
 		</div>
 	);

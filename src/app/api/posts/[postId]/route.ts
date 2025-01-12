@@ -16,6 +16,7 @@ export async function GET(req: Request, { params }: Params) {
 		const post = await prisma.post.findUnique({
 			where: {
 				id: postId,
+				expiredAt: { gt: new Date() },
 			},
 			include: {
 				tags: true,
@@ -28,7 +29,7 @@ export async function GET(req: Request, { params }: Params) {
 		});
 
 		if (!post) {
-			return new NextResponse("Post not found", { status: 404 });
+			return new NextResponse("Post not found or expired", { status: 404 });
 		}
 
 		const userVote = post.votes.length > 0 ? post.votes[0].type : null;

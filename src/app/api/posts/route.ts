@@ -62,7 +62,9 @@ export async function GET(request: Request) {
 
 	try {
 		let orderBy: Prisma.PostOrderByWithRelationInput = {};
-		let where: Prisma.PostWhereInput = {};
+		let where: Prisma.PostWhereInput = {
+			expiredAt: { gt: new Date() },
+		};
 
 		if (sortBy === "new") {
 			orderBy = { createdAt: "desc" };
@@ -75,15 +77,24 @@ export async function GET(request: Request) {
 			if (timePeriod === "day") {
 				const oneDayAgo = new Date();
 				oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-				where = { createdAt: { gte: oneDayAgo } };
+				where = {
+					expiredAt: { gt: new Date() },
+					createdAt: { gte: oneDayAgo },
+				};
 			} else if (timePeriod === "week") {
 				const oneWeekAgo = new Date();
 				oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-				where = { createdAt: { gte: oneWeekAgo } };
+				where = {
+					expiredAt: { gt: new Date() },
+					createdAt: { gte: oneWeekAgo },
+				};
 			} else if (timePeriod === "month") {
 				const oneMonthAgo = new Date();
 				oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-				where = { createdAt: { gte: oneMonthAgo } };
+				where = {
+					expiredAt: { gt: new Date() },
+					createdAt: { gte: oneMonthAgo },
+				};
 			}
 		} else if (sortBy === "hot") {
 			orderBy = {
@@ -96,6 +107,7 @@ export async function GET(request: Request) {
 				retrospective.getDate() - HOT_SORT_RETROSPECTIVE_DAYS
 			);
 			where = {
+				expiredAt: { gt: new Date() },
 				createdAt: { gte: retrospective },
 				votes: {
 					some: {

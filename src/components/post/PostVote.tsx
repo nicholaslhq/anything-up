@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowBigUp, ArrowBigDown, Frown, Annoyed } from "lucide-react";
+import { ArrowBigUp, ArrowBigDown, Frown, Annoyed, Meh } from "lucide-react";
 import PostVoteCount from "@/components/post/PostVoteCount";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -15,6 +15,7 @@ interface PostVoteProps {
 	loading?: boolean;
 	error?: boolean;
 	empty?: boolean;
+	expired?: boolean;
 }
 
 const PostVote: React.FC<PostVoteProps> = ({
@@ -28,6 +29,7 @@ const PostVote: React.FC<PostVoteProps> = ({
 	loading = false,
 	error = false,
 	empty = false,
+	expired = false,
 }) => {
 	const postUrl = `${window.location.origin}/posts/${postId}`;
 
@@ -45,6 +47,10 @@ const PostVote: React.FC<PostVoteProps> = ({
 				<Button variant="neutral" className="w-full" disabled={empty}>
 					<Annoyed />
 				</Button>
+			) : expired ? (
+				<Button variant="neutral" className="w-full" disabled={expired}>
+					<Meh />
+				</Button>
 			) : (
 				<PostVoteCount
 					upVotes={upVotes}
@@ -58,7 +64,7 @@ const PostVote: React.FC<PostVoteProps> = ({
 					variant={userVote === "UPVOTE" ? "default" : "neutral"}
 					onClick={() => handleUpvote(postId)}
 					size={"mobileIcon"}
-					disabled={loading || error || empty}
+					disabled={loading || error || empty || expired}
 				>
 					<ArrowBigUp />
 				</Button>
@@ -66,7 +72,7 @@ const PostVote: React.FC<PostVoteProps> = ({
 					variant={userVote === "DOWNVOTE" ? "default" : "neutral"}
 					onClick={() => handleDownvote(postId)}
 					size={"mobileIcon"}
-					disabled={loading || error || empty}
+					disabled={loading || error || empty || expired}
 				>
 					<ArrowBigDown />
 				</Button>

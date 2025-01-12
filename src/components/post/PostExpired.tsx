@@ -2,20 +2,16 @@ import React from "react";
 import { Card, CardHeader } from "@/components/ui/card";
 import PostVote from "@/components/post/PostVote";
 
-interface PostErrorProps {
-	message: string;
-}
-
-const PostError: React.FC<PostErrorProps> = ({ message }) => {
+const PostExpired = () => {
 	return (
 		<div className="flex gap-3 md:gap-5 w-full sm:max-w-lg">
-			<Card className="flex-1 bg-red-300 dark:bg-red-800">
+			<Card className="flex-1">
 				<CardHeader>
-					<p>Error: {message}</p>
+					<p>Post not found or expired</p>
 				</CardHeader>
 			</Card>
 			<PostVote
-				postId="error"
+				postId="expired"
 				handleUpvote={() => {}}
 				handleDownvote={() => {}}
 				userVote={null}
@@ -23,12 +19,12 @@ const PostError: React.FC<PostErrorProps> = ({ message }) => {
 				downVotes={0}
 				expiresInDays={0}
 				loading={false}
-				error={true}
+				error={false}
 				empty={false}
-				expired={false}
+				expired={true}
 			/>
 		</div>
 	);
 };
 
-export default PostError;
+export default PostExpired;
