@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { ArrowBigUp, ArrowBigDown, Frown, Annoyed, Meh } from "lucide-react";
 import PostVoteCount from "@/components/post/PostVoteCount";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
 
 interface PostVoteProps {
 	postId: string;
