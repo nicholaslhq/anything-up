@@ -36,6 +36,7 @@ export default function Home() {
 	const [refreshPosts, setRefreshPosts] = useState(false);
 	const [timePeriod, setTimePeriod] = useState("day");
 	const [error, setError] = useState<string | null>(null);
+	const [expired, setExpired] = useState(false);
 	const [isUserIdAvailable, setIsUserIdAvailable] = useState(false);
 	const [selectedTag, setSelectedTag] = useState<string | null>(null);
 	const { toast } = useToast();
@@ -67,6 +68,7 @@ export default function Home() {
 					const data: PostType[] = await res.json();
 					setPosts(data);
 					setEmpty(data.length === 0);
+					setExpired(false);
 				}
 			} catch (e: unknown) {
 				console.error("Failed to fetch posts:", e);
@@ -83,7 +85,18 @@ export default function Home() {
 	}, [sortBy, timePeriod, isUserIdAvailable, refreshPosts]);
 
 	const handleUpvote = async (postId: string) => {
-		await fetch(`/api/posts/${postId}/upvote`, { method: "POST" });
+		const res = await fetch(`/api/posts/${postId}/upvote`, { method: "POST" });
+		if (res.status === 429) {
+			const errorData = await res.json();
+			if (errorData.error === "RATE_LIMIT_EXCEEDED") {
+				toast({
+					title: "Too many votes",
+					description: "You're voting too frequently. Please try again later.",
+					variant: "destructive",
+				});
+				return;
+			}
+		}
 		setPosts((prevPosts) =>
 			prevPosts.map((post) => {
 				if (post.id === postId) {
@@ -108,7 +121,18 @@ export default function Home() {
 	};
 
 	const handleDownvote = async (postId: string) => {
-		await fetch(`/api/posts/${postId}/downvote`, { method: "POST" });
+		const res = await fetch(`/api/posts/${postId}/downvote`, { method: "POST" });
+		if (res.status === 429) {
+			const errorData = await res.json();
+			if (errorData.error === "RATE_LIMIT_EXCEEDED") {
+				toast({
+					title: "Too many votes",
+					description: "You're voting too frequently. Please try again later.",
+					variant: "destructive",
+				});
+				return;
+			}
+		}
 		setPosts((prevPosts) =>
 			prevPosts.map((post) => {
 				if (post.id === postId) {
@@ -135,7 +159,7 @@ export default function Home() {
 
 	const handleSubmit = async (event: React.FormEvent, tags: string[]) => {
 		event.preventDefault();
-		await fetch("/api/posts", {
+		const res = await fetch("/api/posts", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -146,14 +170,23 @@ export default function Home() {
 			}),
 		});
 
+		if (res.status === 429) {
+			const errorData = await res.json();
+			if (errorData.error === "RATE_LIMIT_EXCEEDED") {
+				toast({
+					title: "Too many posts",
+					description: "You're posting too frequently. Please try again later.",
+					variant: "destructive",
+				});
+				return;
+			}
+		}
+
 		toast({
 			title: "It’s Up!",
 			description: "Your world is up for everyone to see",
 		});
 
-		const res = await fetch(
-			`/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}`
-		);
 		const data: PostType[] = await res.json();
 		setPosts(data);
 		setEmpty(data.length === 0);
@@ -193,7 +226,7 @@ export default function Home() {
 					setContent={setContent}
 				/>
 				{error || loading || empty ? (
-					<PostStatus error={error} loading={loading} empty={empty} />
+					<PostStatus error={error} loading={loading} empty={empty} expired={expired} />
 				) : (
 					filteredPosts.map((post) => (
 						<div key={post.id} className="flex w-full sm:max-w-lg">

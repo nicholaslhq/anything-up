@@ -1,18 +1,38 @@
-import { PrismaClient, VoteType } from '@prisma/client';
+import { PrismaClient, Prisma, VoteType } from '@prisma/client';
 import { cookies } from 'next/headers';
+import { NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
+const POST_SETTING_DEFAULT_EXPIRATION_DAYS = 30;
+const POST_SETTING_MAX_VOTES_PER_HOUR = 60;
+
 export async function POST(request: Request, context: { params: { postId: string } }) {
-  const { postId } = await context.params;
-  const cookieStore = await cookies();
-  const userId = cookieStore.get('userId')?.value;
+ const { postId } = await context.params;
+ const cookieStore = await cookies();
+ const userId = cookieStore.get('userId')?.value;
 
   if (!userId) {
     return new Response(JSON.stringify({ error: 'userId not found' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });
+  }
+
+  const votesInLastHour = await prisma.vote.count({
+    where: {
+      userId: userId,
+      createdAt: {
+        gte: new Date(Date.now() - 60 * 60 * 1000),
+      },
+    },
+  });
+
+  if (votesInLastHour >= POST_SETTING_MAX_VOTES_PER_HOUR) {
+    return NextResponse.json(
+      { error: 'RATE_LIMIT_EXCEEDED' },
+      { status: 429 }
+    );
   }
 
   try {
@@ -23,12 +43,21 @@ export async function POST(request: Request, context: { params: { postId: string
       },
     });
 
+    const expirationDate = new Date();
+    expirationDate.setDate(expirationDate.getDate() + POST_SETTING_DEFAULT_EXPIRATION_DAYS);
+
     if (existingVote) {
       if (existingVote.type === VoteType.UPVOTE) {
         await prisma.vote.delete({
           where: {
             id: existingVote.id,
           },
+        });
+        await prisma.post.update({
+          where: { id: postId },
+          data: {
+            expiredAt: expirationDate,
+          } as Prisma.PostUpdateInput,
         });
         return new Response(JSON.stringify({ message: 'Upvote removed' }), {
           status: 200,
@@ -47,6 +76,12 @@ export async function POST(request: Request, context: { params: { postId: string
             type: VoteType.UPVOTE,
           },
         });
+        await prisma.post.update({
+          where: { id: postId },
+          data: {
+            expiredAt: expirationDate,
+          } as Prisma.PostUpdateInput,
+        });
         return new Response(JSON.stringify({ message: 'Vote changed to upvote' }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
@@ -59,6 +94,12 @@ export async function POST(request: Request, context: { params: { postId: string
           userId: userId,
           type: VoteType.UPVOTE,
         },
+      });
+      await prisma.post.update({
+        where: { id: postId },
+        data: {
+          expiredAt: expirationDate,
+        } as Prisma.PostUpdateInput,
       });
       return new Response(JSON.stringify({ message: 'Upvoted!' }), {
         status: 200,

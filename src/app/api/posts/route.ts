@@ -5,9 +5,33 @@ import { cookies } from "next/headers";
 
 const POST_SETTING_DEFAULT_EXPIRATION_DAYS = 30;
 const HOT_SORT_RETROSPECTIVE_DAYS = 7;
+const POST_SETTING_MAX_POSTS_PER_HOUR = 5;
 
 export async function POST(request: Request) {
+	const cookieStore = await cookies();
+	const userId = cookieStore.get('userId')?.value;
+
+	if (!userId) {
+		return NextResponse.json({ error: 'userId not found' }, { status: 400 });
+	}
+
 	try {
+		const existingPostsCount = await prisma.post.count({
+			where: {
+				createdAt: {
+					gte: new Date(Date.now() - 60 * 60 * 1000),
+				},
+				userId: userId,
+			},
+		});
+
+		if (existingPostsCount >= POST_SETTING_MAX_POSTS_PER_HOUR) {
+			return NextResponse.json(
+				{ error: 'RATE_LIMIT_EXCEEDED' },
+				{ status: 429 }
+			);
+		}
+
 		const json = await request.json();
 
 		if (!json || typeof json !== "object") {
@@ -32,6 +56,7 @@ export async function POST(request: Request) {
 		const post = await prisma.post.create({
 			data: {
 				content,
+				userId: userId,
 				tags: {
 					connectOrCreate: filteredTags.map((tag: string) => ({
 						where: { name: tag },
