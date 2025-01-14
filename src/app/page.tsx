@@ -10,7 +10,7 @@ import PostStatus from "@/components/post/PostStatus";
 import PostFooter from "@/components/post/PostFooter";
 import { useToast } from "@/hooks/use-toast";
 
-const POST_SETTING_LOADING_TIMEOUT = 5000;
+const SETTING_POST_LOADING_TIMEOUT = 10000;
 
 export interface Post {
 	id: string;
@@ -56,7 +56,7 @@ export default function Home() {
 			const timeoutId = setTimeout(() => {
 				setError("Failed to load posts. Please check your connection.");
 				setLoading(false);
-			}, POST_SETTING_LOADING_TIMEOUT);
+			}, SETTING_POST_LOADING_TIMEOUT);
 			try {
 				const res = await fetch(
 					`/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}`

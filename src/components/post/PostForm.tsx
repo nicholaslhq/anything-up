@@ -6,9 +6,9 @@ import { Card, CardFooter, CardHeader } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import PostFormAction from "@/components/post/PostFormAction";
 
-const POST_SETTING_NEW_TAG_LIMIT = 5;
-const POST_SETTING_MAX_TAG_LENGTH = 20;
-const POST_SETTING_MAX_CONTENT_LENGTH = 300;
+const SETTING_POST_NEW_TAG_LIMIT = 5;
+const SETTING_POST_MAX_TAG_LENGTH = 20;
+const SETTING_POST_MAX_CONTENT_LENGTH = 300;
 
 interface PostSubmissionFormProps {
 	handleSubmit: (event: React.FormEvent, tags: string[]) => Promise<void>;
@@ -39,7 +39,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 	const tagInputRefs = useRef<HTMLInputElement[]>([]);
 
 	const addTagInput = () => {
-		if (tagInputs.length < POST_SETTING_NEW_TAG_LIMIT) {
+		if (tagInputs.length < SETTING_POST_NEW_TAG_LIMIT) {
 			setTagInputs([...tagInputs, ""]);
 			setTagErrors([...tagErrors, ""]);
 			// Focus on the last input after it's added
@@ -57,7 +57,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 	const handleTagInputChange = (index: number, value: string) => {
 		const newTagInputs = [...tagInputs];
 		const newTagErrors = [...tagErrors];
-		if (value.length > POST_SETTING_MAX_TAG_LENGTH) {
+		if (value.length > SETTING_POST_MAX_TAG_LENGTH) {
 			return;
 		}
 		const regex = /[^a-zA-Z0-9]/g;
@@ -102,7 +102,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 							const inputValue = e.target.value;
 							if (
 								inputValue.length <=
-								POST_SETTING_MAX_CONTENT_LENGTH
+								SETTING_POST_MAX_CONTENT_LENGTH
 							) {
 								setContent(inputValue);
 								setPostContentLength(inputValue.length);
@@ -110,11 +110,11 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 								setContent(
 									inputValue.slice(
 										0,
-										POST_SETTING_MAX_CONTENT_LENGTH
+										SETTING_POST_MAX_CONTENT_LENGTH
 									)
 								);
 								setPostContentLength(
-									POST_SETTING_MAX_CONTENT_LENGTH
+									SETTING_POST_MAX_CONTENT_LENGTH
 								);
 							}
 						}}
@@ -145,7 +145,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 										}`}
 										value={tagInput}
 										onChange={(e) => {
-											if (e.target.value.length <= POST_SETTING_MAX_TAG_LENGTH) {
+											if (e.target.value.length <= SETTING_POST_MAX_TAG_LENGTH) {
 												handleTagInputChange(
 													index,
 													e.target.value
@@ -155,7 +155,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 									/>
 								</div>
 							))}
-						{tagInputs.length < POST_SETTING_NEW_TAG_LIMIT && (
+						{tagInputs.length < SETTING_POST_NEW_TAG_LIMIT && (
 							<div>
 								<Button
 									type="button"
@@ -177,7 +177,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 			</Card>
 			<PostFormAction
 				postContentLength={postContentLength}
-				maxContentLength={POST_SETTING_MAX_CONTENT_LENGTH}
+				maxContentLength={SETTING_POST_MAX_CONTENT_LENGTH}
 				clearForm={clearForm}
 				tagErrors={tagErrors}
 				content={content}

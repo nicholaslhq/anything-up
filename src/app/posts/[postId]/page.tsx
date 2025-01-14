@@ -8,7 +8,7 @@ import PostStatus from "@/components/post/PostStatus";
 import { useParams } from "next/navigation";
 import PostFooter from "@/components/post/PostFooter";
 
-const POST_SETTING_LOADING_TIMEOUT = 5000;
+const SETTING_POST_LOADING_TIMEOUT = 10000;
 
 export interface Post {
 	id: string;
@@ -42,7 +42,7 @@ export default function PostDetailPage() {
 			const timeoutId = setTimeout(() => {
 				setError("Failed to load post. Please check your connection.");
 				setLoading(false);
-			}, POST_SETTING_LOADING_TIMEOUT);
+			}, SETTING_POST_LOADING_TIMEOUT);
 			try {
 				const res = await fetch(`/api/posts/${postId}`);
 				if (!res.ok) {

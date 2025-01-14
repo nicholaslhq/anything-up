@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { cookies } from "next/headers";
 
-const POST_SETTING_DEFAULT_EXPIRATION_DAYS = 30;
-const HOT_SORT_RETROSPECTIVE_DAYS = 7;
-const POST_SETTING_MAX_POSTS_PER_HOUR = 5;
+const SETTING_POST_DEFAULT_EXPIRATION_DAYS = 30;
+const SETTING_POST_HOT_SORT_RETROSPECTIVE_DAYS = 7;
+const SETTING_POST_MAX_POSTS_PER_HOUR = 5;
 
 export async function POST(request: Request) {
 	const cookieStore = await cookies();
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 			},
 		});
 
-		if (existingPostsCount >= POST_SETTING_MAX_POSTS_PER_HOUR) {
+		if (existingPostsCount >= SETTING_POST_MAX_POSTS_PER_HOUR) {
 			return NextResponse.json(
 				{ error: 'RATE_LIMIT_EXCEEDED' },
 				{ status: 429 }
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
 		const finalExpirationDays =
 			expirationDays !== undefined
 				? parseInt(expirationDays, 10)
-				: POST_SETTING_DEFAULT_EXPIRATION_DAYS;
+				: SETTING_POST_DEFAULT_EXPIRATION_DAYS;
 
 		// Create the post in the database
 		const now = new Date();
@@ -129,7 +129,7 @@ export async function GET(request: Request) {
 			};
 			const retrospective = new Date();
 			retrospective.setDate(
-				retrospective.getDate() - HOT_SORT_RETROSPECTIVE_DAYS
+				retrospective.getDate() - SETTING_POST_HOT_SORT_RETROSPECTIVE_DAYS
 			);
 			where = {
 				expiredAt: { gt: new Date() },

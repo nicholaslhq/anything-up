@@ -5,7 +5,7 @@ import { Post } from "@/components/post/Post";
 import { Button } from "@/components/ui/button";
 import { Ellipsis } from "lucide-react";
 
-const POST_SETTING_INITIAL_TAG_DISPLAY_LIMIT = 3;
+const SETTING_POST_INITIAL_TAG_DISPLAY_LIMIT = 3;
 
 interface PostTagsProps {
 	tags?: Post["tags"];
@@ -43,7 +43,7 @@ const PostTags: React.FC<PostTagsProps> = ({
 						: tags
 								.slice(
 									0,
-									POST_SETTING_INITIAL_TAG_DISPLAY_LIMIT
+									SETTING_POST_INITIAL_TAG_DISPLAY_LIMIT
 								)
 								.map((tag) => (
 									<Button
@@ -60,7 +60,7 @@ const PostTags: React.FC<PostTagsProps> = ({
 										<span>{tag}</span>
 									</Button>
 								))}
-					{tags.length > POST_SETTING_INITIAL_TAG_DISPLAY_LIMIT && (
+					{tags.length > SETTING_POST_INITIAL_TAG_DISPLAY_LIMIT && (
 						<Button
 							size="icon"
 							onClick={() => setShowAllTags(!showAllTags)}

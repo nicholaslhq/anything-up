@@ -4,8 +4,8 @@ import { NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
-const POST_SETTING_DEFAULT_EXPIRATION_DAYS = 30;
-const POST_SETTING_MAX_VOTES_PER_HOUR = 60;
+const SETTING_POST_DEFAULT_EXPIRATION_DAYS = 30;
+const SETTING_POST_MAX_VOTES_PER_HOUR = 60;
 
 export async function POST(request: Request, context: { params: { postId: string } }) {
  const { postId } = await context.params;
@@ -28,7 +28,7 @@ export async function POST(request: Request, context: { params: { postId: string
     },
   });
 
-  if (votesInLastHour >= POST_SETTING_MAX_VOTES_PER_HOUR) {
+  if (votesInLastHour >= SETTING_POST_MAX_VOTES_PER_HOUR) {
     return NextResponse.json(
       { error: 'RATE_LIMIT_EXCEEDED' },
       { status: 429 }
@@ -44,7 +44,7 @@ export async function POST(request: Request, context: { params: { postId: string
     });
 
     const expirationDate = new Date();
-    expirationDate.setDate(expirationDate.getDate() + POST_SETTING_DEFAULT_EXPIRATION_DAYS);
+    expirationDate.setDate(expirationDate.getDate() + SETTING_POST_DEFAULT_EXPIRATION_DAYS);
 
     if (existingVote) {
       if (existingVote.type === VoteType.DOWNVOTE) {
