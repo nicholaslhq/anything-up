@@ -14,7 +14,7 @@ interface PostVoteCountProps {
 	upVotes: number;
 	downVotes: number;
 	expiresInDays: number;
-	postUrl: string;
+	postUrl?: string;
 }
 
 const formatCount = (count: number): string => {
@@ -45,11 +45,19 @@ const PostVoteCount: React.FC<PostVoteCountProps> = ({
 	const { toast } = useToast();
 
 	const handleShare = () => {
-		navigator.clipboard.writeText(postUrl);
-		toast({
-			title: "Link copied!",
-			description: "Share this link with others.",
-		});
+		if (postUrl) {
+			navigator.clipboard.writeText(postUrl);
+			toast({
+				title: "Link copied!",
+				description: "Share this link with others.",
+			});
+		} else {
+			toast({
+				title: "No link to copy",
+				description: "The post URL is not available.",
+				variant: "destructive",
+			});
+		}
 	};
 
 	return (

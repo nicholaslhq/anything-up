@@ -35,7 +35,7 @@ const PostVote: React.FC<PostVoteProps> = ({
 	const [localUpVotes, setLocalUpVotes] = useState(initialUpVotes);
 	const [localDownVotes, setLocalDownVotes] = useState(initialDownVotes);
 	const [localUserVote, setLocalUserVote] = useState(initialUserVote);
-	const postUrl = `${window.location.origin}/posts/${postId}`;
+	const postUrl = postId ? `${window.location.origin}/posts/${postId}` : undefined;
 	const { toast } = useToast();
 
 	const onUpvoteClick = async () => {
