@@ -29,6 +29,7 @@ export interface Post {
 
 export default function Home() {
 	const [posts, setPosts] = useState<PostType[]>([]);
+	const [filteredPosts, setFilteredPosts] = useState<PostType[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [empty, setEmpty] = useState(false);
 	const [content, setContent] = useState("");
@@ -67,6 +68,7 @@ export default function Home() {
 				} else {
 					const data: PostType[] = await res.json();
 					setPosts(data);
+					setFilteredPosts(data);
 					setEmpty(data.length === 0);
 					setExpired(false);
 				}
@@ -78,11 +80,23 @@ export default function Home() {
 					clearTimeout(timeoutId);
 				}
 				setLoading(false);
+				setRefreshPosts(false);
 			}
 		};
 
 		fetchPosts();
 	}, [sortBy, timePeriod, isUserIdAvailable, refreshPosts]);
+
+	useEffect(() => {
+		const matchingPosts = selectedTag
+			? posts.filter((post) =>
+					post.tags?.some(
+						(tag) => tag.toLowerCase() === selectedTag.toLowerCase()
+					)
+			  )
+			: posts;
+		setFilteredPosts(matchingPosts);
+    }, [selectedTag, posts]);
 
 	const handleUpvote = async (postId: string) => {
 		const res = await fetch(`/api/posts/${postId}/upvote`, { method: "POST" });
@@ -187,10 +201,7 @@ export default function Home() {
 			description: "Your world is up for everyone to see",
 		});
 
-		const data: PostType[] = await res.json();
-		setPosts(data);
-		setEmpty(data.length === 0);
-		setContent("");
+		setRefreshPosts(true);
 	};
 
 	const handleTagClick = (tag: string) => {
@@ -198,14 +209,6 @@ export default function Home() {
 			prevSelectedTag === tag ? null : tag
 		);
 	};
-
-	const filteredPosts = selectedTag
-		? posts.filter((post) =>
-				post.tags?.some(
-					(tag) => tag.toLowerCase() === selectedTag.toLowerCase()
-				)
-		  )
-		: posts;
 
 	return (
 		<div className="min-h-screen p-4 sm:p-10 font-[family-name:var(--font-geist-sans)]">
@@ -228,7 +231,7 @@ export default function Home() {
 				{error || loading || empty ? (
 					<PostStatus error={error} loading={loading} empty={empty} expired={expired} />
 				) : (
-					filteredPosts.map((post) => (
+					(filteredPosts ?? posts).map((post) => (
 						<div key={post.id} className="flex w-full sm:max-w-lg">
 							<PostComponent
 								post={post}
