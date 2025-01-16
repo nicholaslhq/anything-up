@@ -79,3 +79,19 @@ body {
 .slide-up-loop {
 	animation: slide-up-loop 1.5s ease infinite;
 }
+
+.flash {
+	animation: opacity-flash 1s ease-out 2;
+}
+
+@keyframes opacity-flash {
+	0% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.5;
+	}
+	100% {
+		opacity: 1;
+	}
+}

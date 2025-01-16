@@ -16,11 +16,10 @@ interface PostSubmissionFormProps {
 	setContent: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
-	handleSubmit,
-	content,
-	setContent,
-}) => {
+const PostSubmissionForm = React.forwardRef<
+	HTMLFormElement,
+	PostSubmissionFormProps
+>(({ handleSubmit, content, setContent }, ref) => {
 	const [postContentLength, setPostContentLength] = useState(0);
 	const [tagInputs, setTagInputs] = useState<string[]>([]);
 	const [tagErrors, setTagErrors] = useState<string[]>([]);
@@ -87,6 +86,7 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 
 	return (
 		<form
+			ref={ref}
 			onSubmit={onSubmit}
 			className="flex gap-3 md:gap-5 w-full sm:max-w-lg"
 		>
@@ -141,11 +141,16 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 										placeholder="Tag"
 										prefix="#"
 										className={`w-24 ${
-											tagErrors[index] ? "bg-red-300 dark:bg-red-800" : ""
+											tagErrors[index]
+												? "bg-red-300 dark:bg-red-800"
+												: ""
 										}`}
 										value={tagInput}
 										onChange={(e) => {
-											if (e.target.value.length <= SETTING_POST_MAX_TAG_LENGTH) {
+											if (
+												e.target.value.length <=
+												SETTING_POST_MAX_TAG_LENGTH
+											) {
 												handleTagInputChange(
 													index,
 													e.target.value
@@ -184,6 +189,8 @@ const PostSubmissionForm: React.FC<PostSubmissionFormProps> = ({
 			/>
 		</form>
 	);
-};
+});
+
+PostSubmissionForm.displayName = "PostSubmissionForm";
 
 export default PostSubmissionForm;

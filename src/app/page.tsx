@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import PostForm from "@/components/post/PostForm";
 import UserIdentifier from "@/components/UserIdentifier";
 import NavigationBar from "@/components/NavigationBar";
@@ -41,6 +41,7 @@ export default function Home() {
 	const [isUserIdAvailable, setIsUserIdAvailable] = useState(false);
 	const [selectedTag, setSelectedTag] = useState<string | null>(null);
 	const { toast } = useToast();
+	 const postFormRef = useRef<HTMLFormElement>(null);
 
 	useEffect(() => {
 		setIsUserIdAvailable(true);
@@ -227,6 +228,7 @@ export default function Home() {
 					handleSubmit={handleSubmit}
 					content={content}
 					setContent={setContent}
+          ref={postFormRef}
 				/>
 				{error || loading || empty ? (
 					<PostStatus error={error} loading={loading} empty={empty} expired={expired} />
@@ -243,7 +245,7 @@ export default function Home() {
 						</div>
 					))
 				)}
-				{filteredPosts.length > 0 && !error && !loading && !error && <PostFooter />}
+				{filteredPosts.length > 0 && !error && !loading && !error && <PostFooter postFormRef={postFormRef}/>}
 			</main>
 		</div>
 	);
