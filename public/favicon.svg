@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 26.5 26.5" fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="miter">
+  <!-- Background shadow rectangle -->
+  <rect x="2" y="2" width="24" height="24" fill="black" rx="1" ry="1"/>
+  <!-- Foreground main rectangle -->
+  <rect x="0.5" y="0.5" width="24" height="24" fill="white" rx="1" ry="1"/>
+  <!-- Arrow up icon -->
+  <path d="M9 18v-6H5l7-7 7 7h-4v6H9z" stroke-width="1.5" stroke-linejoin="round" transform="translate(0.5, 0.5)"/>
+</svg>
