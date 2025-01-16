@@ -33,7 +33,7 @@ export default function Home() {
 	const [loading, setLoading] = useState(false);
 	const [empty, setEmpty] = useState(false);
 	const [content, setContent] = useState("");
-	const [sortBy, setSortBy] = useState("hot"); // Default sort
+	const [sortBy, setSortBy] = useState<string>("");
 	const [refreshPosts, setRefreshPosts] = useState(false);
 	const [timePeriod, setTimePeriod] = useState("day");
 	const [error, setError] = useState<string | null>(null);
@@ -41,7 +41,14 @@ export default function Home() {
 	const [isUserIdAvailable, setIsUserIdAvailable] = useState(false);
 	const [selectedTag, setSelectedTag] = useState<string | null>(null);
 	const { toast } = useToast();
-	 const postFormRef = useRef<HTMLFormElement>(null);
+	const postFormRef = useRef<HTMLFormElement>(null);
+
+	useEffect(() => {
+		const storedSortBy = localStorage.getItem('sortBy');
+		if (storedSortBy) {
+			setSortBy(storedSortBy);
+		}
+	}, []);
 
 	useEffect(() => {
 		setIsUserIdAvailable(true);

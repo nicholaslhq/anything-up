@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
 	Menubar,
 	MenubarContent,
@@ -25,6 +25,13 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 	refreshPosts,
 	setRefreshPosts,
 }) => {
+	useEffect(() => {
+		const storedSortBy = localStorage.getItem('sortBy');
+		if (storedSortBy) {
+			setSortBy(storedSortBy);
+		}
+	}, [setSortBy]);
+
 	return (
 		<Menubar>
 			<MenubarMenu>
@@ -35,6 +42,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 							setRefreshPosts(!refreshPosts);
 						} else {
 							setSortBy("hot");
+							localStorage.setItem('sortBy', 'hot');
 						}
 					}}
 				>
@@ -49,6 +57,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 							setRefreshPosts(!refreshPosts);
 						} else {
 							setSortBy("new");
+							localStorage.setItem('sortBy', 'new');
 						}
 					}}
 				>
@@ -63,6 +72,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 							setRefreshPosts(!refreshPosts);
 						} else {
 							setSortBy("top");
+							localStorage.setItem('sortBy', 'top');
 						}
 					}}
 				>
