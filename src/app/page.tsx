@@ -252,7 +252,7 @@ export default function Home() {
 						</div>
 					))
 				)}
-				{filteredPosts.length > 0 && !error && !loading && !error && <PostFooter postFormRef={postFormRef}/>}
+				{filteredPosts.length > 0 && !error && !loading && postFormRef.current && <PostFooter postFormRef={postFormRef}/>}
 			</main>
 		</div>
 	);

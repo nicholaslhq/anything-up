@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 interface PostFooterProps {
-	postFormRef: React.RefObject<HTMLFormElement>;
+	postFormRef: React.RefObject<HTMLFormElement | null>;
 }
 
 const PostFooter: React.FC<PostFooterProps> = ({ postFormRef }) => {
