@@ -2,10 +2,11 @@ import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { cookies } from "next/headers";
-
-const SETTING_POST_DEFAULT_EXPIRATION_DAYS = 30;
-const SETTING_POST_HOT_SORT_RETROSPECTIVE_DAYS = 7;
-const SETTING_POST_MAX_POSTS_PER_HOUR = 5;
+import {
+	SETTING_POST_DEFAULT_EXPIRATION_DAYS,
+	SETTING_POST_HOT_SORT_RETROSPECTIVE_DAYS,
+	SETTING_POST_MAX_POSTS_PER_HOUR
+} from "@/lib/settings";
 
 export async function POST(request: Request) {
 	const cookieStore = await cookies();
@@ -122,18 +123,23 @@ export async function GET(request: Request) {
 				};
 			}
 		} else if (sortBy === "hot") {
+			// Order by the number of votes in descending order to get the "hottest" posts
 			orderBy = {
 				votes: {
 					_count: "desc",
 				},
 			};
+			// Define a retrospective period to consider for hot posts
 			const retrospective = new Date();
 			retrospective.setDate(
 				retrospective.getDate() - SETTING_POST_HOT_SORT_RETROSPECTIVE_DAYS
 			);
 			where = {
+				// Ensure the post has not expired
 				expiredAt: { gt: new Date() },
+				// Consider posts created within the retrospective period
 				createdAt: { gte: retrospective },
+				// Consider posts that have received votes in the last 24 hours
 				votes: {
 					some: {
 						createdAt: {
@@ -157,33 +163,40 @@ export async function GET(request: Request) {
 			},
 		});
 
-		const postsWithDetails = await Promise.all(
-			posts.map(async (post) => {
-				const userVote =
-					post.votes.length > 0 ? post.votes[0].type : null;
-				return {
-					...post,
-					tags: post.tags.map((tag) => tag.name),
-					upVotes: await prisma.vote.count({
-						where: {
-							postId: post.id,
-							type: "UPVOTE",
-						},
-					}),
-					downVotes: await prisma.vote.count({
-						where: {
-							postId: post.id,
-							type: "DOWNVOTE",
-						},
-					}),
-					expiresInDays: Math.ceil(
-						(post.expiredAt!.getTime() - new Date().getTime()) /
-							(1000 * 60 * 60 * 24)
-					),
-					userVote: userVote,
-				};
-			})
-		);
+		// Fetch vote counts for all posts in one query
+		const voteCounts = await prisma.vote.groupBy({
+			by: ['postId', 'type'],
+			where: {
+				postId: {
+					in: posts.map((post) => post.id),
+				},
+			},
+			_count: {
+				_all: true,
+			},
+		});
+
+		const postsWithDetails = posts.map((post) => {
+			const userVote = post.votes.length > 0 ? post.votes[0].type : null;
+			const upVotes = voteCounts.find(
+				(vote) => vote.postId === post.id && vote.type === 'UPVOTE'
+			)?._count._all || 0;
+			const downVotes = voteCounts.find(
+				(vote) => vote.postId === post.id && vote.type === 'DOWNVOTE'
+			)?._count._all || 0;
+
+			return {
+				...post,
+				tags: post.tags.map((tag) => tag.name),
+				upVotes: upVotes,
+				downVotes: downVotes,
+				expiresInDays: Math.ceil(
+					(post.expiredAt!.getTime() - new Date().getTime()) /
+						(1000 * 60 * 60 * 24)
+				),
+				userVote: userVote,
+			};
+		});
 
 		return NextResponse.json(postsWithDetails);
 	} catch (error) {
