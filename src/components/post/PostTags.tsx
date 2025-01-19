@@ -4,8 +4,7 @@ import React, { useState } from "react";
 import { Post } from "@/components/post/Post";
 import { Button } from "@/components/ui/button";
 import { Ellipsis } from "lucide-react";
-
-const SETTING_POST_INITIAL_TAG_DISPLAY_LIMIT = 3;
+import { SETTING_POST_INITIAL_TAG_DISPLAY_LIMIT } from "@/lib/settings";
 
 interface PostTagsProps {
 	tags?: Post["tags"];

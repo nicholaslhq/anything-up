@@ -9,8 +9,7 @@ import PostComponent, { Post as PostType } from "@/components/post/Post";
 import PostStatus from "@/components/post/PostStatus";
 import PostFooter from "@/components/post/PostFooter";
 import { useToast } from "@/hooks/use-toast";
-
-const SETTING_POST_LOADING_TIMEOUT = 10000;
+import { SETTING_POST_LOADING_TIMEOUT } from "@/lib/settings";
 
 export interface Post {
 	id: string;

@@ -5,10 +5,11 @@ import { Textarea } from "@/components/ui/textarea"; // Import the Textarea comp
 import { Card, CardFooter, CardHeader } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import PostFormAction from "@/components/post/PostFormAction";
-
-const SETTING_POST_NEW_TAG_LIMIT = 5;
-const SETTING_POST_MAX_TAG_LENGTH = 20;
-const SETTING_POST_MAX_CONTENT_LENGTH = 300;
+import {
+	SETTING_POST_NEW_TAG_LIMIT,
+	SETTING_POST_MAX_TAG_LENGTH,
+	SETTING_POST_MAX_CONTENT_LENGTH
+} from "@/lib/settings";
 
 interface PostSubmissionFormProps {
 	handleSubmit: (event: React.FormEvent, tags: string[]) => Promise<void>;

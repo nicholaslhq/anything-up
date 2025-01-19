@@ -1,11 +1,12 @@
 import { PrismaClient, VoteType } from "@prisma/client";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import {
+	SETTING_POST_DEFAULT_EXPIRATION_DAYS,
+	SETTING_POST_MAX_VOTES_PER_HOUR,
+} from "@/lib/settings";
 
 const prisma = new PrismaClient();
-
-const SETTING_POST_DEFAULT_EXPIRATION_DAYS = 30;
-const SETTING_POST_MAX_VOTES_PER_HOUR = 60;
 
 export async function POST(
 	request: Request,

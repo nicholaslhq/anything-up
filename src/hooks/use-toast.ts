@@ -4,9 +4,10 @@
 import * as React from "react";
 
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast";
-
-const SETTING_HOOKS_TOAST_LIMIT = 1;
-const SETTING_HOOKS_TOAST_REMOVE_DELAY = 5000;
+import {
+	SETTING_HOOKS_TOAST_LIMIT,
+	SETTING_HOOKS_TOAST_REMOVE_DELAY,
+} from "@/lib/settings";
 
 type ToasterToast = ToastProps & {
 	id: string;
