@@ -47,7 +47,7 @@ export async function POST(request: Request) {
 
 		const finalExpirationDays =
 			expirationDays !== undefined
-				? parseInt(expirationDays, 10)
+				? parseInt(expirationDays, 30)
 				: SETTING_POST_DEFAULT_EXPIRATION_DAYS;
 
 		// Create the post in the database
@@ -70,7 +70,29 @@ export async function POST(request: Request) {
 			} as Prisma.PostCreateInput,
 		});
 
-		return NextResponse.json(post, { status: 201 });
+		// Fetch initial vote counts for the new post
+		const voteCounts = await prisma.vote.groupBy({
+			by: ['type'],
+			where: {
+				postId: post.id,
+			},
+			_count: {
+				_all: true,
+			},
+		});
+
+		const upVotes = voteCounts.find(vote => vote.type === 'UPVOTE')?._count._all || 0;
+		const downVotes = voteCounts.find(vote => vote.type === 'DOWNVOTE')?._count._all || 0;
+
+		const postWithVotes = {
+			...post,
+			upVotes: upVotes,
+			downVotes: downVotes,
+			expiresInDays: Math.ceil((post.expiredAt.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)),
+			userVote: null // Newly created posts have no user vote
+		};
+
+		return NextResponse.json(postWithVotes, { status: 201 });
 	} catch (error) {
 		console.error("Error creating post:", String(error));
 		return NextResponse.json(

@@ -91,9 +91,8 @@ export default function Home() {
 			}
 		};
 
-		fetchPosts();
-	}, [sortBy, timePeriod, isUserIdAvailable, refreshPosts]);
-
+				fetchPosts();
+			}, [sortBy, timePeriod, isUserIdAvailable]);
 	useEffect(() => {
 		const matchingPosts = selectedTag
 			? posts.filter((post) =>
@@ -207,8 +206,9 @@ export default function Home() {
 			title: "It’s Up!",
 			description: "Your world is up for everyone to see",
 		});
-
-		setRefreshPosts(true);
+		
+		const newPost = await res.json();
+		setPosts((prevPosts) => [newPost, ...prevPosts]);
 	};
 
 	const handleTagClick = (tag: string) => {
