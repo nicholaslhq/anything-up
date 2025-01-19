@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import UserIdentifier from "@/components/UserIdentifier";
 import Title from "@/components/Title";
 import PostComponent, { Post as PostType } from "@/components/post/Post";
@@ -30,6 +30,7 @@ export default function PostDetailPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [expired, setExpired] = useState(false);
 	const { postId } = useParams();
+	const postFormRef = useRef<HTMLFormElement>(null);
 
 	useEffect(() => {
 		const fetchPost = async () => {
@@ -135,7 +136,7 @@ export default function PostDetailPage() {
 						</div>
 					)
 				)}
-				{post && <PostFooter />}
+				{post && <PostFooter postFormRef={postFormRef} />}
 			</main>
 		</div>
 	);
