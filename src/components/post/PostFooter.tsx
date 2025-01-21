@@ -16,7 +16,7 @@ const PostFooter: React.FC<PostFooterProps> = ({ postFormRef }) => {
 				<div className="flex flex-col gap-2">
 					<p>Your vote shapes AnythingUp for everyone else</p>
 					<p>
-						<Link href="/" className="underline">
+						<Link href="/" className="underline hover:opacity-80">
 							Discover more
 						</Link>
 					</p>
@@ -32,7 +32,7 @@ const PostFooter: React.FC<PostFooterProps> = ({ postFormRef }) => {
 								postFormRef?.current?.classList.remove("flash");
 							}, 2000);
 						}}
-						className="underline cursor-pointer"
+						className="underline cursor-pointer hover:opacity-80"
 					>
 						Got AnythingUp to share?
 					</p>
