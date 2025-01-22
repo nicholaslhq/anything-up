@@ -136,7 +136,7 @@ export default function PostDetailPage() {
 						</div>
 					)
 				)}
-				{post && <PostFooter postFormRef={postFormRef} />}
+				<PostFooter postFormRef={postFormRef} />
 			</main>
 		</div>
 	);
