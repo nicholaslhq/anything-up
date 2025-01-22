@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { PostType } from "@prisma/client";
 
 interface Params {
 	params: {
@@ -17,6 +18,7 @@ export async function GET(req: Request, { params }: Params) {
 			where: {
 				id: postId,
 				expiredAt: { gt: new Date() },
+				type: PostType.STANDARD,
 			},
 			include: {
 				tags: true,
