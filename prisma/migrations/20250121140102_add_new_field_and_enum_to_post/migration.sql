@@ -1,0 +1,5 @@
+-- CreateEnum
+CREATE TYPE "PostType" AS ENUM ('STANDARD', 'PINNED', 'RESTRICTED');
+
+-- AlterTable
+ALTER TABLE "Post" ADD COLUMN     "type" "PostType" NOT NULL DEFAULT 'STANDARD';

@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
+import { PostType, Prisma } from "@prisma/client";
 import { cookies } from "next/headers";
 import {
 	SETTING_POST_DEFAULT_EXPIRATION_DAYS,
@@ -112,6 +112,7 @@ export async function GET(request: Request) {
 		let orderBy: Prisma.PostOrderByWithRelationInput = {};
 		let where: Prisma.PostWhereInput = {
 			expiredAt: { gt: new Date() },
+			type: PostType.STANDARD,
 		};
 
 		if (sortBy === "new") {

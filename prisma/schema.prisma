@@ -14,6 +14,7 @@ model Post {
   tags      Tag[]
   votes     Vote[]
   userId    String
+  type      PostType  @default(STANDARD)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   expiredAt DateTime
@@ -46,4 +47,10 @@ enum VoteType {
   UPVOTE
   DOWNVOTE
   CANCELLED
+}
+
+enum PostType {
+  STANDARD
+  PINNED
+  RESTRICTED
 }
