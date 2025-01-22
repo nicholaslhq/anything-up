@@ -1,19 +1,22 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { PostType, Prisma } from "@prisma/client";
+import { PostType, Prisma, VoteType } from "@prisma/client";
 import { cookies } from "next/headers";
 import {
 	SETTING_POST_DEFAULT_EXPIRATION_DAYS,
 	SETTING_POST_HOT_SORT_RETROSPECTIVE_DAYS,
-	SETTING_POST_MAX_POSTS_PER_HOUR
+	SETTING_POST_MAX_POSTS_PER_HOUR,
 } from "@/lib/settings";
 
 export async function POST(request: Request) {
 	const cookieStore = await cookies();
-	const userId = cookieStore.get('userId')?.value;
+	const userId = cookieStore.get("userId")?.value;
 
 	if (!userId) {
-		return NextResponse.json({ error: 'userId not found' }, { status: 400 });
+		return NextResponse.json(
+			{ error: "userId not found" },
+			{ status: 400 }
+		);
 	}
 
 	try {
@@ -28,7 +31,7 @@ export async function POST(request: Request) {
 
 		if (existingPostsCount >= SETTING_POST_MAX_POSTS_PER_HOUR) {
 			return NextResponse.json(
-				{ error: 'RATE_LIMIT_EXCEEDED' },
+				{ error: "RATE_LIMIT_EXCEEDED" },
 				{ status: 429 }
 			);
 		}
@@ -72,7 +75,7 @@ export async function POST(request: Request) {
 
 		// Fetch initial vote counts for the new post
 		const voteCounts = await prisma.vote.groupBy({
-			by: ['type'],
+			by: ["type"],
 			where: {
 				postId: post.id,
 			},
@@ -81,15 +84,21 @@ export async function POST(request: Request) {
 			},
 		});
 
-		const upVotes = voteCounts.find(vote => vote.type === 'UPVOTE')?._count._all || 0;
-		const downVotes = voteCounts.find(vote => vote.type === 'DOWNVOTE')?._count._all || 0;
+		const upVotes =
+			voteCounts.find((vote) => vote.type === VoteType.UPVOTE)?._count._all || 0;
+		const downVotes =
+			voteCounts.find((vote) => vote.type === VoteType.DOWNVOTE)?._count._all ||
+			0;
 
 		const postWithVotes = {
 			...post,
 			upVotes: upVotes,
 			downVotes: downVotes,
-			expiresInDays: Math.ceil((post.expiredAt.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)),
-			userVote: null // Newly created posts have no user vote
+			expiresInDays: Math.ceil(
+				(post.expiredAt.getTime() - new Date().getTime()) /
+					(1000 * 60 * 60 * 24)
+			),
+			userVote: null, // Newly created posts have no user vote
 		};
 
 		return NextResponse.json(postWithVotes, { status: 201 });
@@ -127,26 +136,25 @@ export async function GET(request: Request) {
 				const oneDayAgo = new Date();
 				oneDayAgo.setDate(oneDayAgo.getDate() - 1);
 				where = {
-					expiredAt: { gt: new Date() },
+					...where,
 					createdAt: { gte: oneDayAgo },
 				};
 			} else if (timePeriod === "week") {
 				const oneWeekAgo = new Date();
 				oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 				where = {
-					expiredAt: { gt: new Date() },
+					...where,
 					createdAt: { gte: oneWeekAgo },
 				};
 			} else if (timePeriod === "month") {
 				const oneMonthAgo = new Date();
 				oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 				where = {
-					expiredAt: { gt: new Date() },
+					...where,
 					createdAt: { gte: oneMonthAgo },
 				};
 			}
 		} else if (sortBy === "hot") {
-			// Order by the number of votes in descending order to get the "hottest" posts
 			orderBy = {
 				votes: {
 					_count: "desc",
@@ -155,11 +163,11 @@ export async function GET(request: Request) {
 			// Define a retrospective period to consider for hot posts
 			const retrospective = new Date();
 			retrospective.setDate(
-				retrospective.getDate() - SETTING_POST_HOT_SORT_RETROSPECTIVE_DAYS
+				retrospective.getDate() -
+					SETTING_POST_HOT_SORT_RETROSPECTIVE_DAYS
 			);
 			where = {
-				// Ensure the post has not expired
-				expiredAt: { gt: new Date() },
+				...where,
 				// Consider posts created within the retrospective period
 				createdAt: { gte: retrospective },
 				// Consider posts that have received votes in the last 24 hours
@@ -186,12 +194,32 @@ export async function GET(request: Request) {
 			},
 		});
 
+		const pinnedPosts = await prisma.post.findMany({
+			where: {
+				expiredAt: { gt: new Date() },
+				type: PostType.PINNED,
+			},
+			include: {
+				tags: true,
+				votes: {
+					where: {
+						userId: userId,
+					},
+				},
+			},
+			orderBy: {
+				createdAt: "desc",
+			},
+		});
+
+		const allPosts = [...pinnedPosts, ...posts];
+
 		// Fetch vote counts for all posts in one query
 		const voteCounts = await prisma.vote.groupBy({
-			by: ['postId', 'type'],
+			by: ["postId", "type"],
 			where: {
 				postId: {
-					in: posts.map((post) => post.id),
+					in: allPosts.map((post) => post.id),
 				},
 			},
 			_count: {
@@ -199,14 +227,17 @@ export async function GET(request: Request) {
 			},
 		});
 
-		const postsWithDetails = posts.map((post) => {
+		const postsWithDetails = allPosts.map((post) => {
 			const userVote = post.votes.length > 0 ? post.votes[0].type : null;
-			const upVotes = voteCounts.find(
-				(vote) => vote.postId === post.id && vote.type === 'UPVOTE'
-			)?._count._all || 0;
-			const downVotes = voteCounts.find(
-				(vote) => vote.postId === post.id && vote.type === 'DOWNVOTE'
-			)?._count._all || 0;
+			const upVotes =
+				voteCounts.find(
+					(vote) => vote.postId === post.id && vote.type === VoteType.UPVOTE
+				)?._count._all || 0;
+			const downVotes =
+				voteCounts.find(
+					(vote) =>
+						vote.postId === post.id && vote.type === VoteType.DOWNVOTE
+				)?._count._all || 0;
 
 			return {
 				...post,

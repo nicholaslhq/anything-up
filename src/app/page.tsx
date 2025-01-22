@@ -17,7 +17,7 @@ export interface Post {
 	updatedAt: Date;
 	content: string;
 	votes: number;
-	status: string;
+	type: "STANDARD" | "PINNED" | "RESTRICTED";
 	expiredAt: Date;
 	tags: string[];
 	upVotes: number;
@@ -27,7 +27,8 @@ export interface Post {
 }
 
 export default function Home() {
-	const [posts, setPosts] = useState<PostType[]>([]);
+	const [pinnedPosts, setPinnedPosts] = useState<PostType[]>([]);
+	const [standardPosts, setStandardPosts] = useState<PostType[]>([]);
 	const [filteredPosts, setFilteredPosts] = useState<PostType[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [empty, setEmpty] = useState(false);
@@ -77,8 +78,11 @@ export default function Home() {
 					setError(message);
 				} else {
 					const data: PostType[] = await res.json();
-					setPosts(data);
-					setFilteredPosts(data);
+					const pinnedPostsData = data.filter(post => post.type === "PINNED");
+					const standardPostsData = data.filter(post => post.type == "STANDARD");
+					setPinnedPosts(pinnedPostsData);
+					setStandardPosts(standardPostsData);
+					setFilteredPosts(standardPostsData);
 					setEmpty(data.length === 0);
 					setExpired(false);
 				}
@@ -94,18 +98,18 @@ export default function Home() {
 			}
 		};
 
-				fetchPosts();
-			}, [sortBy, timePeriod, isUserIdAvailable]);
+			fetchPosts();
+		}, [sortBy, timePeriod, isUserIdAvailable]);
 	useEffect(() => {
 		const matchingPosts = selectedTag
-			? posts.filter((post) =>
+			? standardPosts.filter((post) => // Filter standard posts only
 					post.tags?.some(
 						(tag) => tag.toLowerCase() === selectedTag.toLowerCase()
 					)
 			  )
-			: posts;
+			: standardPosts; // Use standard posts for filtering
 		setFilteredPosts(matchingPosts);
-    }, [selectedTag, posts]);
+    }, [selectedTag, standardPosts]); // Depend on standardPosts
 
 	const handleUpvote = async (postId: string) => {
 		const res = await fetch(`/api/posts/${postId}/upvote`, { method: "POST" });
@@ -120,7 +124,7 @@ export default function Home() {
 				return;
 			}
 		}
-		setPosts((prevPosts) =>
+		setStandardPosts((prevPosts) =>
 			prevPosts.map((post) => {
 				if (post.id === postId) {
 					return {
@@ -156,7 +160,7 @@ export default function Home() {
 				return;
 			}
 		}
-		setPosts((prevPosts) =>
+		setStandardPosts((prevPosts) =>
 			prevPosts.map((post) => {
 				if (post.id === postId) {
 					return {
@@ -211,7 +215,7 @@ export default function Home() {
 		});
 		
 		const newPost = await res.json();
-		setPosts((prevPosts) => [newPost, ...prevPosts]);
+		setStandardPosts((prevPosts) => [newPost, ...prevPosts]);
 	};
 
 	const handleTagClick = (tag: string) => {
@@ -242,17 +246,30 @@ export default function Home() {
 				{error || loading || empty ? (
 					<PostStatus error={error} loading={loading} empty={empty} expired={expired} />
 				) : (
-					(filteredPosts ?? posts).map((post) => (
-						<div key={post.id} className="flex w-full sm:max-w-lg">
-							<PostComponent
-								post={post}
-								handleUpvote={handleUpvote}
-								handleDownvote={handleDownvote}
-								onTagClick={handleTagClick}
-								selectedTag={selectedTag}
-							/>
-						</div>
-					))
+					<>
+						{pinnedPosts.map((post) => (
+							<div key={post.id} className="flex w-full sm:max-w-lg">
+								<PostComponent
+									post={post}
+									handleUpvote={handleUpvote}
+									handleDownvote={handleDownvote}
+									onTagClick={handleTagClick}
+									selectedTag={selectedTag}
+								/>
+							</div>
+						))}
+						{(filteredPosts ?? standardPosts).map((post) => (
+							<div key={post.id} className="flex w-full sm:max-w-lg">
+								<PostComponent
+									post={post}
+									handleUpvote={handleUpvote}
+									handleDownvote={handleDownvote}
+									onTagClick={handleTagClick}
+									selectedTag={selectedTag}
+								/>
+							</div>
+						))}
+					</>
 				)}
 				{filteredPosts.length > 0 && !error && !loading && postFormRef.current && <PostFooter postFormRef={postFormRef}/>}
 			</main>

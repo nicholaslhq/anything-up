@@ -2,6 +2,7 @@ import React from "react";
 import { Card, CardHeader, CardFooter } from "@/components/ui/card";
 import PostTags from "@/components/post/PostTags";
 import PostVote from "@/components/post/PostVote";
+import { Pin } from "lucide-react";
 
 export interface Post {
 	id: string;
@@ -11,6 +12,7 @@ export interface Post {
 	expiresInDays: number;
 	userVote: "UPVOTE" | "DOWNVOTE" | null;
 	tags?: string[];
+	type: "STANDARD" | "PINNED" | "RESTRICTED";
 }
 
 interface PostProps {
@@ -34,8 +36,13 @@ const Post: React.FC<PostProps> = ({
 			className="flex gap-3 md:gap-5 w-full sm:max-w-lg break-all"
 		>
 			<Card className="flex-1">
-				<CardHeader>
-					<p>{post.content}</p>
+				<CardHeader className={"relative [&_svg]:size-5"}>
+					{post.type === "PINNED" && (
+						<div className="absolute top-2 right-2">
+							<Pin />
+						</div>
+					)}
+					<p className="break-words">{post.content}</p>
 				</CardHeader>
 				<CardFooter>
 					<PostTags
