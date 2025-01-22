@@ -47,6 +47,9 @@ export default function Home() {
 		if (storedSortBy) {
 			setSortBy(storedSortBy);
 		}
+		else {
+			setSortBy("hot");
+		}
 	}, []);
 
 	useEffect(() => {
