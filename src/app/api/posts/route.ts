@@ -85,10 +85,11 @@ export async function POST(request: Request) {
 		});
 
 		const upVotes =
-			voteCounts.find((vote) => vote.type === VoteType.UPVOTE)?._count._all || 0;
+			voteCounts.find((vote) => vote.type === VoteType.UPVOTE)?._count
+				._all || 0;
 		const downVotes =
-			voteCounts.find((vote) => vote.type === VoteType.DOWNVOTE)?._count._all ||
-			0;
+			voteCounts.find((vote) => vote.type === VoteType.DOWNVOTE)?._count
+				._all || 0;
 
 		const postWithVotes = {
 			...post,
@@ -101,7 +102,17 @@ export async function POST(request: Request) {
 			userVote: null, // Newly created posts have no user vote
 		};
 
-		return NextResponse.json(postWithVotes, { status: 201 });
+		const postWithTagsAndVotes = await prisma.post
+			.findUnique({
+				where: { id: post.id },
+				include: { tags: true },
+			})
+			.then((fullPost) => ({
+				...postWithVotes,
+				tags: fullPost?.tags.map((tag) => tag.name) || [],
+			}));
+
+		return NextResponse.json(postWithTagsAndVotes, { status: 201 });
 	} catch (error) {
 		console.error("Error creating post:", String(error));
 		return NextResponse.json(
@@ -231,12 +242,14 @@ export async function GET(request: Request) {
 			const userVote = post.votes.length > 0 ? post.votes[0].type : null;
 			const upVotes =
 				voteCounts.find(
-					(vote) => vote.postId === post.id && vote.type === VoteType.UPVOTE
+					(vote) =>
+						vote.postId === post.id && vote.type === VoteType.UPVOTE
 				)?._count._all || 0;
 			const downVotes =
 				voteCounts.find(
 					(vote) =>
-						vote.postId === post.id && vote.type === VoteType.DOWNVOTE
+						vote.postId === post.id &&
+						vote.type === VoteType.DOWNVOTE
 				)?._count._all || 0;
 
 			return {
