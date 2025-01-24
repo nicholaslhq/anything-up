@@ -16,8 +16,8 @@ const PostSkeleton: React.FC = () => {
 			</Card>
 			<PostVote
 				postId="loading"
-				handleUpvote={() => {}}
-				handleDownvote={() => {}}
+				handleUpvote={() => Promise.resolve()}
+				handleDownvote={() => Promise.resolve()}
 				userVote={null}
 				upVotes={0}
 				downVotes={0}

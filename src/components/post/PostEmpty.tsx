@@ -12,8 +12,8 @@ const PostEmpty = () => {
 			</Card>
 			<PostVote
 				postId="empty"
-				handleUpvote={() => {}}
-				handleDownvote={() => {}}
+				handleUpvote={() => Promise.resolve()}
+				handleDownvote={() => Promise.resolve()}
 				userVote={null}
 				upVotes={0}
 				downVotes={0}

@@ -16,8 +16,8 @@ const PostError: React.FC<PostErrorProps> = ({ message }) => {
 			</Card>
 			<PostVote
 				postId="error"
-				handleUpvote={() => {}}
-				handleDownvote={() => {}}
+				handleUpvote={() => Promise.resolve()}
+				handleDownvote={() => Promise.resolve()}
 				userVote={null}
 				upVotes={0}
 				downVotes={0}
