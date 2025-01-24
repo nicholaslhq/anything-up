@@ -1,19 +1,31 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, createContext, useContext } from "react";
 import { Moon, Sun } from "lucide-react";
 
-const ThemeSwitcher: React.FC = () => {
-	const [theme, setTheme] = useState<"light" | "dark">("light");
+const ThemeContext = createContext<{
+	theme: "light" | "dark";
+	toggleTheme: () => void;
+}>({
+	theme: "light",
+	toggleTheme: () => {},
+});
 
-	useEffect(() => {
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
+	children,
+}) => {
+	const initialTheme = () => {
 		const storedTheme = localStorage.getItem("theme");
 		if (storedTheme) {
-			setTheme(storedTheme as "light" | "dark");
+			return storedTheme as "light" | "dark";
 		} else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-			setTheme("dark");
+			return "dark";
+		} else {
+			return "light";
 		}
-	}, []);
+	};
+
+	const [theme, setTheme] = useState<"light" | "dark">(initialTheme);
 
 	useEffect(() => {
 		localStorage.setItem("theme", theme);
@@ -29,6 +41,18 @@ const ThemeSwitcher: React.FC = () => {
 	const toggleTheme = () => {
 		setTheme(theme === "light" ? "dark" : "light");
 	};
+
+	return (
+		<ThemeContext.Provider value={{ theme, toggleTheme }}>
+			{children}
+		</ThemeContext.Provider>
+	);
+};
+
+export const useTheme = () => useContext(ThemeContext);
+
+const ThemeSwitcher: React.FC = () => {
+	const { theme, toggleTheme } = useTheme();
 
 	return (
 		<div onClick={toggleTheme} className="cursor-pointer">
