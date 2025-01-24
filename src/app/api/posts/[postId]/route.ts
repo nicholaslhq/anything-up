@@ -18,7 +18,7 @@ export async function GET(req: Request, { params }: Params) {
 			where: {
 				id: postId,
 				expiredAt: { gt: new Date() },
-				type: PostType.STANDARD,
+				type: { not: PostType.RESTRICTED },
 			},
 			include: {
 				tags: true,

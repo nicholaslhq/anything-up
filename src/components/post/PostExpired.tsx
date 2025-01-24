@@ -7,7 +7,7 @@ const PostExpired = () => {
 		<div className="flex gap-3 md:gap-5 w-full sm:max-w-lg">
 			<Card className="flex-1">
 				<CardHeader>
-					<p>Post not found or expired</p>
+					<p>Oops! This post has either expired or doesn&apos;t exist.</p>
 				</CardHeader>
 			</Card>
 			<PostVote
