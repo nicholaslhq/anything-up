@@ -14,18 +14,25 @@ const ThemeContext = createContext<{
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 	children,
 }) => {
-	const initialTheme = () => {
-		const storedTheme = localStorage.getItem("theme");
-		if (storedTheme) {
-			return storedTheme as "light" | "dark";
-		} else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-			return "dark";
-		} else {
-			return "light";
+	const getInitialTheme = (): "light" | "dark" => {
+		if (typeof window !== "undefined") {
+			// First, check localStorage
+			const storedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
+			if (storedTheme) return storedTheme;
+
+			// Otherwise, check system preference
+			if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+				return "dark";
+			}
 		}
+		return "light"; // Default to light if no match
 	};
 
-	const [theme, setTheme] = useState<"light" | "dark">(initialTheme);
+	const [theme, setTheme] = useState<"light" | "dark">("light");
+
+	useEffect(() => {
+		setTheme(getInitialTheme());
+	}, []);
 
 	useEffect(() => {
 		localStorage.setItem("theme", theme);
