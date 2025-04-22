@@ -118,7 +118,7 @@ export default function PostDetailPage() {
 				<Title loading={loading} />
 				{error || loading || expired ? (
 					<PostStatus
-						error={null}
+						error={error}
 						loading={loading}
 						empty={false}
 						expired={expired}

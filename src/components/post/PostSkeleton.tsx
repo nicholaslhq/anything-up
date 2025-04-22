@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardHeader, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import PostVote from "@/components/post/PostVote";
 
@@ -8,11 +8,8 @@ const PostSkeleton: React.FC = () => {
 		<div className="flex gap-3 md:gap-5 w-full sm:max-w-lg">
 			<Card className="flex-1">
 				<CardHeader>
-					<Skeleton className="h-4 w-[150px] sm:w-[200px]" />
+					<Skeleton className="h-5 w-[150px] md:w-[200px] sm:w-[250px]" />
 				</CardHeader>
-				<CardFooter>
-					<Skeleton className="h-4 w-[100px]" />
-				</CardFooter>
 			</Card>
 			<PostVote
 				postId="loading"
