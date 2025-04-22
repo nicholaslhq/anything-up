@@ -420,7 +420,10 @@ export default function Home() {
 		);
 	};
 
-	const handleSubmit = async (event: React.FormEvent, tags: string[]) => {
+	const handleSubmit = async (
+		event: React.FormEvent,
+		tags: string[]
+	): Promise<boolean> => {
 		event.preventDefault();
 		if (!content.trim()) {
 			toast({
@@ -428,7 +431,7 @@ export default function Home() {
 				description: "Cannot submit an empty post.",
 				variant: "destructive",
 			});
-			return;
+			return false; // Indicate failure
 		}
 		const res = await fetch("/api/posts", {
 			method: "POST",
@@ -450,19 +453,43 @@ export default function Home() {
 						"You're posting too frequently. Please try again later.",
 					variant: "destructive",
 				});
-				return;
+				return false; // Indicate failure
 			}
 		}
 
-		if (!res.ok && res.status !== 429) {
+		if (!res.ok) {
+			const errorData = await res.json();
+			if (
+				res.status === 429 &&
+				errorData.error === "RATE_LIMIT_EXCEEDED"
+			) {
+				toast({
+					title: "Too many posts",
+					description:
+						"You're posting too frequently. Please try again later.",
+					variant: "destructive",
+				});
+				return false; // Indicate failure
+			}
+			if (res.status === 409 && errorData.error === "DUPLICATE_POST") {
+				toast({
+					title: "Duplicate Post",
+					description:
+						"You already have an active post with the same content.",
+					variant: "destructive",
+				});
+				return false; // Indicate failure
+			}
+			// Handle other non-OK responses
 			toast({
 				title: "Submission Failed",
 				description: "Could not submit post.",
 				variant: "destructive",
 			});
-			return;
+			return false; // Indicate failure
 		}
 
+		// If submission was successful (res.ok is true)
 		toast({
 			title: "It’s Up!",
 			description: "Your world is up for everyone to see",
@@ -471,12 +498,12 @@ export default function Home() {
 		const newPost = await res.json();
 		// Add to standard posts, even if a filter is active. The filter useEffect will handle visibility.
 		setStandardPosts((prevPosts) => [newPost, ...prevPosts]);
-		setContent(""); // Clear content after successful submission
-		if (postFormRef.current) {
-			// Clear tags in PostForm if possible (assuming it has a method/prop for it)
-			// postFormRef.current.clearTags?.(); // Example: Needs implementation in PostForm
-		}
+
+		// Content and tags will be cleared by the PostSubmissionForm component
+		// based on the success status returned by this function.
 		setEmpty(false); // No longer empty after posting
+
+		return true; // Indicate success
 	};
 
 	const handleTagClick = (tag: string) => {
@@ -518,7 +545,12 @@ export default function Home() {
 					standardPosts.length === 0 &&
 					pinnedPosts.length === 0 && (
 						<div className="w-full sm:max-w-lg">
-							<PostStatus loading={true} />
+							<PostStatus
+								loading={true}
+								error={null}
+								empty={false}
+								expired={false}
+							/>
 						</div>
 					)}
 				{/* Initial Error State (only when no posts loaded yet) */}
@@ -526,7 +558,12 @@ export default function Home() {
 					standardPosts.length === 0 &&
 					pinnedPosts.length === 0 && (
 						<div className="w-full sm:max-w-lg">
-							<PostStatus error={error} />
+							<PostStatus
+								loading={false}
+								error={error}
+								empty={false}
+								expired={false}
+							/>
 						</div>
 					)}
 				{/* Empty State (only when truly empty and not loading/erroring) */}
@@ -536,7 +573,12 @@ export default function Home() {
 					standardPosts.length === 0 &&
 					pinnedPosts.length === 0 && (
 						<div className="w-full sm:max-w-lg">
-							<PostStatus empty={true} />
+							<PostStatus
+								loading={false}
+								error={null}
+								empty={true}
+								expired={false}
+							/>
 						</div>
 					)}
 				{/* Pinned Posts */}

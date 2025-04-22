@@ -8,11 +8,11 @@ import PostFormAction from "@/components/post/PostFormAction";
 import {
 	SETTING_POST_NEW_TAG_LIMIT,
 	SETTING_POST_MAX_TAG_LENGTH,
-	SETTING_POST_MAX_CONTENT_LENGTH
+	SETTING_POST_MAX_CONTENT_LENGTH,
 } from "@/lib/settings";
 
 interface PostSubmissionFormProps {
-	handleSubmit: (event: React.FormEvent, tags: string[]) => Promise<void>;
+	handleSubmit: (event: React.FormEvent, tags: string[]) => Promise<boolean>;
 	content: string;
 	setContent: React.Dispatch<React.SetStateAction<string>>;
 }
@@ -77,12 +77,14 @@ const PostSubmissionForm = React.forwardRef<
 			.map((input) => input.trim())
 			.filter((tag) => tag !== "");
 		const uniqueTagsToAdd = [...new Set(tagsToAdd)]; // Eliminate duplicates
-		await handleSubmit(event, uniqueTagsToAdd);
-		setContent("");
-		setPostContentLength(0);
-		setTagInputs([]);
-		setTagErrors([]);
-		window.scrollTo({ top: 0, behavior: "smooth" });
+		const success = await handleSubmit(event, uniqueTagsToAdd);
+		if (success) {
+			setContent("");
+			setPostContentLength(0);
+			setTagInputs([]);
+			setTagErrors([]);
+			window.scrollTo({ top: 0, behavior: "smooth" });
+		}
 	};
 
 	return (

@@ -56,7 +56,8 @@ export async function POST(request: Request) {
 			);
 		}
 
-		const json = await request.json();
+		// Check for duplicate active posts by the same user with the same content
+		const json = await request.json(); // Need to parse json first to get content
 
 		if (!json || typeof json !== "object") {
 			return NextResponse.json(
@@ -65,12 +66,32 @@ export async function POST(request: Request) {
 			);
 		}
 
-		// Type assertion for safety, assuming validation happens elsewhere or is simple
 		const { content, tags, expirationDays } = json as {
+			// Extract all necessary fields
 			content: string;
 			tags: string[];
 			expirationDays?: number;
 		};
+
+		// Check for duplicate active posts by the same user with the same content
+		const duplicatePostCount = await prisma.post.count({
+			where: {
+				userId: userId,
+				content: content,
+				expiredAt: {
+					gt: new Date(), // Check if the post is not expired
+				},
+			},
+		});
+
+		if (duplicatePostCount > 0) {
+			return NextResponse.json(
+				{ error: "DUPLICATE_POST" },
+				{ status: 409 } // Conflict status code
+			);
+		}
+
+		// Continue with post creation if no duplicate is found
 
 		const filteredTags = tags.filter((tag: string) => tag.trim() !== "");
 
