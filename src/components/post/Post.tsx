@@ -44,13 +44,15 @@ const Post: React.FC<PostProps> = ({
 					)}
 					<p className="break-words">{post.content}</p>
 				</CardHeader>
-				<CardFooter>
-					<PostTags
-						tags={post.tags}
-						onTagClick={onTagClick}
-						selectedTag={selectedTag}
-					/>
-				</CardFooter>
+				{post.tags && post.tags.length > 0 && (
+					<CardFooter>
+						<PostTags
+							tags={post.tags}
+							onTagClick={onTagClick}
+							selectedTag={selectedTag}
+						/>
+					</CardFooter>
+				)}
 			</Card>
 			<PostVote
 				postId={post.id}
