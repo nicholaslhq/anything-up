@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import PostForm from "@/components/post/PostForm";
 import UserIdentifier from "@/components/UserIdentifier";
 import NavigationBar from "@/components/NavigationBar";
@@ -9,7 +9,11 @@ import PostComponent, { Post as PostType } from "@/components/post/Post";
 import PostStatus from "@/components/post/PostStatus";
 import PostFooter from "@/components/post/PostFooter";
 import { useToast } from "@/hooks/use-toast";
-import { SETTING_POST_LOADING_TIMEOUT } from "@/lib/settings";
+import {
+	SETTING_POST_LOADING_TIMEOUT,
+	SETTING_POST_PAGE_SIZE,
+	SETTING_POST_PREFETCH_DISTANCE,
+} from "@/lib/settings";
 
 export interface Post {
 	id: string;
@@ -30,25 +34,151 @@ export default function Home() {
 	const [pinnedPosts, setPinnedPosts] = useState<PostType[]>([]);
 	const [standardPosts, setStandardPosts] = useState<PostType[]>([]);
 	const [filteredPosts, setFilteredPosts] = useState<PostType[]>([]);
-	const [loading, setLoading] = useState(false);
+	const [loading, setLoading] = useState(false); // Initial load loading
 	const [empty, setEmpty] = useState(false);
 	const [content, setContent] = useState("");
 	const [sortBy, setSortBy] = useState<string>("");
 	const [refreshPosts, setRefreshPosts] = useState(false);
 	const [timePeriod, setTimePeriod] = useState("day");
-	const [error, setError] = useState<string | null>(null);
-	const [expired, setExpired] = useState(false);
+	const [error, setError] = useState<string | null>(null); // Initial load error
+	// const [expired, setExpired] = useState(false); // Removed unused state
 	const [isUserIdAvailable, setIsUserIdAvailable] = useState(false);
 	const [selectedTag, setSelectedTag] = useState<string | null>(null);
 	const { toast } = useToast();
 	const postFormRef = useRef<HTMLFormElement>(null);
+	const [page, setPage] = useState(1); // Current page for pagination
+	const [hasMore, setHasMore] = useState(true); // Flag to indicate if more posts can be loaded
+	const [loadingMore, setLoadingMore] = useState(false); // Loading state for subsequent fetches
+	const [loadMoreError, setLoadMoreError] = useState<string | null>(null); // Error state for subsequent fetches
+
+	// --- New Function: fetchMorePosts (Moved Before lastPostElementRef) ---
+	const fetchMorePosts = useCallback(
+		async (isRetry = false) => {
+			// Wrapped in useCallback
+			if (loading || loadingMore || !hasMore) {
+				// console.log("fetchMorePosts skipped:", { loading, loadingMore, hasMore });
+				return;
+			}
+
+			// console.log(`Fetching more posts: page=${page + 1}`);
+			setLoadingMore(true);
+			setLoadMoreError(null);
+			let res: Response | null = null; // Define res outside try block
+
+			try {
+				const nextPage = page + 1;
+				res = await fetch(
+					// Assign to outer res
+					`/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}&page=${nextPage}&limit=${SETTING_POST_PREFETCH_DISTANCE}`
+				);
+
+				if (!res.ok) {
+					if (!isRetry) {
+						// console.log("Fetch more failed, scheduling retry...");
+						setTimeout(() => fetchMorePosts(true), 2000); // Retry after 2s
+						// Don't set loadingMore to false yet
+						return; // Exit function early, wait for retry
+					} else {
+						// console.log("Fetch more retry failed.");
+						const message = `Failed to load more posts: ${res.status} ${res.statusText}`;
+						setLoadMoreError(message);
+						setHasMore(false); // Stop trying if retry fails
+						setLoadingMore(false); // Set loading false on final failure
+						return; // Exit
+					}
+				}
+
+				const newPosts: PostType[] = await res.json();
+				// console.log("More posts received:", newPosts.length);
+
+				// Filter out potential duplicates
+				const uniqueNewPosts = newPosts.filter(
+					(newPost) =>
+						!standardPosts.some(
+							(existingPost) => existingPost.id === newPost.id
+						) &&
+						!pinnedPosts.some(
+							(existingPinnedPost) =>
+								existingPinnedPost.id === newPost.id
+						)
+				);
+
+				setStandardPosts((prevPosts) => [
+					...prevPosts,
+					...uniqueNewPosts,
+				]);
+				setPage(nextPage);
+				setHasMore(
+					uniqueNewPosts.length === SETTING_POST_PREFETCH_DISTANCE
+				); // Check if the batch was full
+				setLoadMoreError(null); // Clear error on success
+				setLoadingMore(false); // Set loading false on success
+			} catch (e: unknown) {
+				console.error("Failed to fetch more posts:", e);
+				if (!isRetry) {
+					// console.log("Fetch more caught error, scheduling retry...");
+					setTimeout(() => fetchMorePosts(true), 2000); // Retry after 2s
+					// Don't set loadingMore to false yet
+					return; // Exit function early, wait for retry
+				} else {
+					// console.log("Fetch more retry caught error.");
+					setLoadMoreError(
+						"Failed to load more posts. Please check your connection."
+					);
+					setHasMore(false); // Stop trying if retry fails
+					setLoadingMore(false); // Set loading false on final failure
+					return; // Exit
+				}
+			}
+			// }, [page, hasMore, loading, loadingMore, sortBy, timePeriod, standardPosts, pinnedPosts]); // Dependencies for useCallback
+		},
+		[
+			page,
+			hasMore,
+			loading,
+			loadingMore,
+			sortBy,
+			timePeriod,
+			standardPosts,
+			pinnedPosts,
+		]
+	); // Removed fetchMorePosts from its own dependency array
+
+	const observer = useRef<IntersectionObserver | null>(null); // Initialize with null
+	const lastPostElementRef = useCallback(
+		// Ref for the element to observe
+		(node: HTMLDivElement | null) => {
+			// Allow null for initial render/disconnect
+			if (loading || loadingMore) return; // Don't observe if already loading initial or more
+			if (observer.current) observer.current.disconnect(); // Disconnect previous observer
+
+			observer.current = new IntersectionObserver(
+				(entries) => {
+					if (
+						entries[0].isIntersecting &&
+						hasMore &&
+						!loadingMore &&
+						!loadMoreError &&
+						!loading
+					) {
+						// Also check !loading
+						// console.log("IntersectionObserver triggered: Fetching more posts");
+						fetchMorePosts();
+					}
+				},
+				{ threshold: 0.1 }
+			); // Trigger slightly before fully visible
+
+			if (node) observer.current.observe(node); // Observe the new node
+		},
+		[loading, loadingMore, hasMore, loadMoreError, fetchMorePosts] // Added fetchMorePosts to dependencies
+	);
 
 	useEffect(() => {
-		const storedSortBy = localStorage.getItem('sortBy');
+		const storedSortBy = localStorage.getItem("sortBy");
 		if (storedSortBy) {
 			setSortBy(storedSortBy);
-		}
-		else {
+		} else {
 			setSortBy("hot");
 		}
 	}, []);
@@ -57,89 +187,163 @@ export default function Home() {
 		setIsUserIdAvailable(true);
 	}, []);
 
+	// --- Modified Initial Fetch useEffect ---
 	useEffect(() => {
-		if (!isUserIdAvailable) {
+		if (!isUserIdAvailable || !sortBy) {
+			// Ensure sortBy is also available
 			return;
 		}
 
-		const fetchPosts = async () => {
+		const fetchInitialPosts = async () => {
+			// console.log(`Fetching initial posts: sortBy=${sortBy}, timePeriod=${timePeriod}`);
 			setLoading(true);
 			setError(null);
+			setPinnedPosts([]); // Clear pinned posts on new initial fetch
+			setStandardPosts([]); // Clear standard posts on new initial fetch
+			setFilteredPosts([]); // Clear filtered posts
+			setPage(1); // Reset page number for new sort/filter
+			setHasMore(true); // Assume there are more posts initially
+			setLoadMoreError(null); // Clear load more error
+			setLoadingMore(false); // Ensure loading more is false
 			const timeoutId = setTimeout(() => {
-				setError("Failed to load posts. Please check your connection.");
-				setLoading(false);
+				if (loading) {
+					// Check if still loading (might have finished quickly)
+					setError(
+						"Failed to load posts. Please check your connection."
+					);
+					setLoading(false);
+					setHasMore(false);
+				}
 			}, SETTING_POST_LOADING_TIMEOUT);
+
 			try {
+				// Fetch initial batch
 				const res = await fetch(
-					`/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}`
+					`/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}&page=1&limit=${SETTING_POST_PAGE_SIZE}`
 				);
+				clearTimeout(timeoutId); // Clear timeout on successful response start
+
 				if (!res.ok) {
 					const message = `Failed to fetch posts: ${res.status} ${res.statusText}`;
 					setError(message);
+					setHasMore(false); // Stop trying if initial fetch fails
 				} else {
 					const data: PostType[] = await res.json();
-					const pinnedPostsData = data.filter(post => post.type === "PINNED");
-					const standardPostsData = data.filter(post => post.type == "STANDARD");
+					// console.log("Initial posts received:", data.length);
+					const pinnedPostsData = data.filter(
+						(post) => post.type === "PINNED"
+					);
+					const standardPostsData = data.filter(
+						(post) => post.type === "STANDARD"
+					);
+
 					setPinnedPosts(pinnedPostsData);
-					setStandardPosts(standardPostsData);
-					setFilteredPosts(standardPostsData);
-					setEmpty(data.length === 0);
-					setExpired(false);
+					setStandardPosts(standardPostsData); // Set initial standard posts
+					// Filtering will be handled by the other useEffect
+
+					setEmpty(
+						pinnedPostsData.length === 0 &&
+							standardPostsData.length === 0
+					);
+					// Determine hasMore based on standard posts only, as pinned are separate
+					setHasMore(
+						standardPostsData.length === SETTING_POST_PAGE_SIZE
+					);
+					// setExpired(false); // Removed - setExpired is not defined
+					setError(null); // Clear error on success
 				}
 			} catch (e: unknown) {
-				console.error("Failed to fetch posts:", e);
+				clearTimeout(timeoutId); // Clear timeout on error
+				console.error("Failed to fetch initial posts:", e);
 				setError("Failed to load posts. Please check your connection.");
+				setHasMore(false); // Stop trying on catch
 			} finally {
-				if (timeoutId) {
-					clearTimeout(timeoutId);
-				}
 				setLoading(false);
-				setRefreshPosts(false);
+				setRefreshPosts(false); // Reset refresh trigger
 			}
 		};
 
-			fetchPosts();
-		}, [sortBy, timePeriod, isUserIdAvailable]);
+		fetchInitialPosts();
+	}, [sortBy, timePeriod, isUserIdAvailable, refreshPosts]); // Added refreshPosts dependency
+
+	// --- useEffect for filtering based on selectedTag ---
 	useEffect(() => {
+		// This effect now correctly filters the currently loaded standardPosts
 		const matchingPosts = selectedTag
-			? standardPosts.filter((post) => // Filter standard posts only
+			? standardPosts.filter((post) =>
 					post.tags?.some(
 						(tag) => tag.toLowerCase() === selectedTag.toLowerCase()
 					)
 			  )
-			: standardPosts; // Use standard posts for filtering
+			: standardPosts; // If no tag selected, show all standard posts
 		setFilteredPosts(matchingPosts);
-    }, [selectedTag, standardPosts]); // Depend on standardPosts
+		// No pagination reset needed here, filtering is client-side on loaded data
+	}, [selectedTag, standardPosts]);
+
+	// --- fetchMorePosts is now defined above lastPostElementRef ---
 
 	const handleUpvote = async (postId: string) => {
-		const res = await fetch(`/api/posts/${postId}/upvote`, { method: "POST" });
+		const res = await fetch(`/api/posts/${postId}/upvote`, {
+			method: "POST",
+		});
 		if (res.status === 429) {
 			const errorData = await res.json();
 			if (errorData.error === "RATE_LIMIT_EXCEEDED") {
 				toast({
 					title: "Too many votes",
-					description: "You're voting too frequently. Please try again later.",
+					description:
+						"You're voting too frequently. Please try again later.",
 					variant: "destructive",
 				});
 				return;
 			}
 		}
+		if (!res.ok && res.status !== 429) {
+			toast({
+				title: "Vote failed",
+				description: "Could not record upvote.",
+				variant: "destructive",
+			});
+			return; // Don't update UI if vote failed server-side
+		}
 		setStandardPosts((prevPosts) =>
 			prevPosts.map((post) => {
 				if (post.id === postId) {
+					const alreadyUpvoted = post.userVote === "UPVOTE";
+					const alreadyDownvoted = post.userVote === "DOWNVOTE";
 					return {
 						...post,
-						userVote: post.userVote === "UPVOTE" ? null : "UPVOTE",
-						upVotes:
-							post.userVote === "UPVOTE"
-								? post.upVotes - 1
-								: post.userVote === "DOWNVOTE"
-								? post.upVotes + 1
-								: post.upVotes + 1,
-						downVotes:
-							post.userVote === "DOWNVOTE"
-								? post.downVotes - 1
-								: post.downVotes,
+						userVote: alreadyUpvoted ? null : "UPVOTE",
+						upVotes: alreadyUpvoted
+							? post.upVotes - 1
+							: alreadyDownvoted
+							? post.upVotes + 1
+							: post.upVotes + 1,
+						downVotes: alreadyDownvoted
+							? post.downVotes - 1
+							: post.downVotes,
+					};
+				}
+				return post;
+			})
+		);
+		// Also update pinned posts if the upvoted post was pinned
+		setPinnedPosts((prevPosts) =>
+			prevPosts.map((post) => {
+				if (post.id === postId) {
+					const alreadyUpvoted = post.userVote === "UPVOTE";
+					const alreadyDownvoted = post.userVote === "DOWNVOTE";
+					return {
+						...post,
+						userVote: alreadyUpvoted ? null : "UPVOTE",
+						upVotes: alreadyUpvoted
+							? post.upVotes - 1
+							: alreadyDownvoted
+							? post.upVotes + 1
+							: post.upVotes + 1,
+						downVotes: alreadyDownvoted
+							? post.downVotes - 1
+							: post.downVotes,
 					};
 				}
 				return post;
@@ -148,35 +352,67 @@ export default function Home() {
 	};
 
 	const handleDownvote = async (postId: string) => {
-		const res = await fetch(`/api/posts/${postId}/downvote`, { method: "POST" });
+		const res = await fetch(`/api/posts/${postId}/downvote`, {
+			method: "POST",
+		});
 		if (res.status === 429) {
 			const errorData = await res.json();
 			if (errorData.error === "RATE_LIMIT_EXCEEDED") {
 				toast({
 					title: "Too many votes",
-					description: "You're voting too frequently. Please try again later.",
+					description:
+						"You're voting too frequently. Please try again later.",
 					variant: "destructive",
 				});
 				return;
 			}
 		}
+		if (!res.ok && res.status !== 429) {
+			toast({
+				title: "Vote failed",
+				description: "Could not record downvote.",
+				variant: "destructive",
+			});
+			return; // Don't update UI if vote failed server-side
+		}
 		setStandardPosts((prevPosts) =>
 			prevPosts.map((post) => {
 				if (post.id === postId) {
+					const alreadyUpvoted = post.userVote === "UPVOTE";
+					const alreadyDownvoted = post.userVote === "DOWNVOTE";
 					return {
 						...post,
-						userVote:
-							post.userVote === "DOWNVOTE" ? null : "DOWNVOTE",
-						downVotes:
-							post.userVote === "DOWNVOTE"
-								? post.downVotes - 1
-								: post.userVote === "UPVOTE"
-								? post.downVotes + 1
-								: post.downVotes + 1,
-						upVotes:
-							post.userVote === "UPVOTE"
-								? post.upVotes - 1
-								: post.upVotes,
+						userVote: alreadyDownvoted ? null : "DOWNVOTE",
+						downVotes: alreadyDownvoted
+							? post.downVotes - 1
+							: alreadyUpvoted
+							? post.downVotes + 1
+							: post.downVotes + 1,
+						upVotes: alreadyUpvoted
+							? post.upVotes - 1
+							: post.upVotes,
+					};
+				}
+				return post;
+			})
+		);
+		// Also update pinned posts if the downvoted post was pinned
+		setPinnedPosts((prevPosts) =>
+			prevPosts.map((post) => {
+				if (post.id === postId) {
+					const alreadyUpvoted = post.userVote === "UPVOTE";
+					const alreadyDownvoted = post.userVote === "DOWNVOTE";
+					return {
+						...post,
+						userVote: alreadyDownvoted ? null : "DOWNVOTE",
+						downVotes: alreadyDownvoted
+							? post.downVotes - 1
+							: alreadyUpvoted
+							? post.downVotes + 1
+							: post.downVotes + 1,
+						upVotes: alreadyUpvoted
+							? post.upVotes - 1
+							: post.upVotes,
 					};
 				}
 				return post;
@@ -186,6 +422,14 @@ export default function Home() {
 
 	const handleSubmit = async (event: React.FormEvent, tags: string[]) => {
 		event.preventDefault();
+		if (!content.trim()) {
+			toast({
+				title: "Empty Post",
+				description: "Cannot submit an empty post.",
+				variant: "destructive",
+			});
+			return;
+		}
 		const res = await fetch("/api/posts", {
 			method: "POST",
 			headers: {
@@ -202,36 +446,62 @@ export default function Home() {
 			if (errorData.error === "RATE_LIMIT_EXCEEDED") {
 				toast({
 					title: "Too many posts",
-					description: "You're posting too frequently. Please try again later.",
+					description:
+						"You're posting too frequently. Please try again later.",
 					variant: "destructive",
 				});
 				return;
 			}
 		}
 
+		if (!res.ok && res.status !== 429) {
+			toast({
+				title: "Submission Failed",
+				description: "Could not submit post.",
+				variant: "destructive",
+			});
+			return;
+		}
+
 		toast({
 			title: "It’s Up!",
 			description: "Your world is up for everyone to see",
 		});
-		
+
 		const newPost = await res.json();
+		// Add to standard posts, even if a filter is active. The filter useEffect will handle visibility.
 		setStandardPosts((prevPosts) => [newPost, ...prevPosts]);
+		setContent(""); // Clear content after successful submission
+		if (postFormRef.current) {
+			// Clear tags in PostForm if possible (assuming it has a method/prop for it)
+			// postFormRef.current.clearTags?.(); // Example: Needs implementation in PostForm
+		}
+		setEmpty(false); // No longer empty after posting
 	};
 
 	const handleTagClick = (tag: string) => {
 		setSelectedTag((prevSelectedTag) =>
 			prevSelectedTag === tag ? null : tag
 		);
+		// When a tag is clicked/unclicked, scroll to top might be desired
+		// window.scrollTo({ top: 0, behavior: 'smooth' }); // Optional: scroll to top
 	};
+
+	// Determine which list of posts to render based on filtering
+	const postsToRender = selectedTag ? filteredPosts : standardPosts;
 
 	return (
 		<div className="min-h-screen p-4 sm:p-10 font-[family-name:var(--font-geist-sans)]">
 			<main className="flex flex-col gap-8 md:gap-10 items-center">
 				<UserIdentifier />
-				<Title setRefreshPosts={setRefreshPosts} loading={loading} />
+				<Title
+					setRefreshPosts={setRefreshPosts}
+					loading={loading || loadingMore}
+				/>{" "}
+				{/* Show loading in title if initial or more */}
 				<NavigationBar
 					sortBy={sortBy}
-					setSortBy={setSortBy}
+					setSortBy={setSortBy} // Changing sort/time resets posts via useEffect
 					timePeriod={timePeriod}
 					setTimePeriod={setTimePeriod}
 					refreshPosts={refreshPosts}
@@ -241,37 +511,130 @@ export default function Home() {
 					handleSubmit={handleSubmit}
 					content={content}
 					setContent={setContent}
-          ref={postFormRef}
+					ref={postFormRef}
 				/>
-				{error || loading || empty ? (
-					<PostStatus error={error} loading={loading} empty={empty} expired={expired} />
-				) : (
-					<>
-						{pinnedPosts.map((post) => (
-							<div key={post.id} className="flex w-full sm:max-w-lg">
-								<PostComponent
-									post={post}
-									handleUpvote={handleUpvote}
-									handleDownvote={handleDownvote}
-									onTagClick={handleTagClick}
-									selectedTag={selectedTag}
-								/>
-							</div>
-						))}
-						{(filteredPosts ?? standardPosts).map((post) => (
-							<div key={post.id} className="flex w-full sm:max-w-lg">
-								<PostComponent
-									post={post}
-									handleUpvote={handleUpvote}
-									handleDownvote={handleDownvote}
-									onTagClick={handleTagClick}
-									selectedTag={selectedTag}
-								/>
-							</div>
-						))}
-					</>
+				{/* Initial Loading State (only when no posts loaded yet) */}
+				{loading &&
+					standardPosts.length === 0 &&
+					pinnedPosts.length === 0 && (
+						<div className="w-full sm:max-w-lg">
+							<PostStatus loading={true} />
+						</div>
+					)}
+				{/* Initial Error State (only when no posts loaded yet) */}
+				{error &&
+					standardPosts.length === 0 &&
+					pinnedPosts.length === 0 && (
+						<div className="w-full sm:max-w-lg">
+							<PostStatus error={error} />
+						</div>
+					)}
+				{/* Empty State (only when truly empty and not loading/erroring) */}
+				{empty &&
+					!loading &&
+					!error &&
+					standardPosts.length === 0 &&
+					pinnedPosts.length === 0 && (
+						<div className="w-full sm:max-w-lg">
+							<PostStatus empty={true} />
+						</div>
+					)}
+				{/* Pinned Posts */}
+				{pinnedPosts.map((post) => (
+					<div
+						key={`pinned-${post.id}`}
+						className="flex w-full sm:max-w-lg"
+					>
+						{" "}
+						{/* Added prefix to key */}
+						<PostComponent
+							post={post}
+							handleUpvote={handleUpvote}
+							handleDownvote={handleDownvote}
+							onTagClick={handleTagClick}
+							selectedTag={selectedTag}
+						/>
+					</div>
+				))}
+				{/* Standard/Filtered Posts List */}
+				{postsToRender.map((post, index) => {
+					// Attach the ref to the *second to last* post for earlier trigger, or adjust threshold
+					const isTriggerElement =
+						postsToRender.length >= 5 &&
+						index === postsToRender.length - 3; // Example: trigger on 3rd last item if list is long enough
+					// Fallback to last element if list is short
+					const isLastElement = index === postsToRender.length - 1;
+
+					return (
+						<div
+							key={post.id}
+							className="flex w-full sm:max-w-lg"
+							ref={
+								isTriggerElement ||
+								(postsToRender.length < 5 && isLastElement)
+									? lastPostElementRef
+									: null
+							} // Attach ref strategically
+						>
+							<PostComponent
+								post={post}
+								handleUpvote={handleUpvote}
+								handleDownvote={handleDownvote}
+								onTagClick={handleTagClick}
+								selectedTag={selectedTag}
+							/>
+						</div>
+					);
+				})}
+				{/* Loading More Indicator */}
+				{loadingMore && (
+					<div className="flex justify-center items-center text-center text-sm text-text my-10">
+						<svg
+							className="animate-spin h-5 w-5 text-main"
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+						>
+							<circle
+								className="opacity-25"
+								cx="12"
+								cy="12"
+								r="10"
+								stroke="currentColor"
+								strokeWidth="4"
+							></circle>
+							<path
+								className="opacity-90"
+								fill="currentColor"
+								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+							></path>
+						</svg>
+						<span className="ml-2">Loading more posts...</span>
+					</div>
 				)}
-				{filteredPosts.length > 0 && !error && !loading && postFormRef.current && <PostFooter postFormRef={postFormRef}/>}
+				{/* Load More Error State */}
+				{loadMoreError && !loadingMore && (
+					<div className="flex justify-center items-center text-center text-sm text-text my-10">
+						<div className="flex flex-col gap-2">
+							<p>Something went wrong</p>
+							<p
+								onClick={() => fetchMorePosts(true)} // Explicitly call as retry on button click
+								className="underline cursor-pointer hover:opacity-80"
+							>
+								Retry?
+							</p>
+						</div>
+					</div>
+				)}
+				{/* End of List Indicator */}
+				{!hasMore &&
+					!loadingMore &&
+					!loading &&
+					!error &&
+					!empty &&
+					(pinnedPosts.length > 0 || standardPosts.length > 0) && ( // Show if not loading/erroring, not empty, and no more pages
+						<PostFooter postFormRef={postFormRef} />
+					)}
 			</main>
 		</div>
 	);

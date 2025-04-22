@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { PostType, Prisma, VoteType } from "@prisma/client";
+import { Post, Tag, Vote, PostType, Prisma, VoteType } from "@prisma/client"; // Added Post, Tag, Vote
 import { cookies } from "next/headers";
 import {
 	SETTING_POST_DEFAULT_EXPIRATION_DAYS,
@@ -8,6 +8,26 @@ import {
 	SETTING_POST_MAX_POSTS_PER_HOUR,
 } from "@/lib/settings";
 
+// --- Type Definitions ---
+
+// Type for the post structure including relations expected from findMany
+type PostWithRelations = Post & {
+	tags: Tag[];
+	votes: Vote[]; // Includes user's vote if userId is provided and matches
+};
+
+// Define the expected structure after processing for the API response
+// (Matches the structure expected by the frontend component)
+type ProcessedPost = Omit<Post, "userId" | "expiredAt" | "votes" | "tags"> & {
+	// Omit fields replaced or restructured
+	tags: string[];
+	upVotes: number;
+	downVotes: number;
+	expiresInDays: number;
+	userVote: VoteType | null;
+};
+
+// --- POST Handler (Unchanged) ---
 export async function POST(request: Request) {
 	const cookieStore = await cookies();
 	const userId = cookieStore.get("userId")?.value;
@@ -45,18 +65,25 @@ export async function POST(request: Request) {
 			);
 		}
 
-		const { content, tags, expirationDays } = json;
+		// Type assertion for safety, assuming validation happens elsewhere or is simple
+		const { content, tags, expirationDays } = json as {
+			content: string;
+			tags: string[];
+			expirationDays?: number;
+		};
+
 		const filteredTags = tags.filter((tag: string) => tag.trim() !== "");
 
 		const finalExpirationDays =
-			expirationDays !== undefined
-				? parseInt(expirationDays, 30)
+			expirationDays !== undefined && !isNaN(expirationDays)
+				? expirationDays // Use provided days if valid
 				: SETTING_POST_DEFAULT_EXPIRATION_DAYS;
 
 		// Create the post in the database
 		const now = new Date();
 		const expiredAt = new Date();
 		expiredAt.setDate(now.getDate() + finalExpirationDays);
+
 		const post = await prisma.post.create({
 			data: {
 				content,
@@ -70,51 +97,38 @@ export async function POST(request: Request) {
 				createdAt: now,
 				updatedAt: now,
 				expiredAt,
-			} as Prisma.PostCreateInput,
+				// Ensure type is set if needed, default is STANDARD
+				type: PostType.STANDARD,
+			},
+			include: { tags: true }, // Include tags to return them immediately
 		});
 
-		// Fetch initial vote counts for the new post
-		const voteCounts = await prisma.vote.groupBy({
-			by: ["type"],
-			where: {
-				postId: post.id,
-			},
-			_count: {
-				_all: true,
-			},
-		});
-
-		const upVotes =
-			voteCounts.find((vote) => vote.type === VoteType.UPVOTE)?._count
-				._all || 0;
-		const downVotes =
-			voteCounts.find((vote) => vote.type === VoteType.DOWNVOTE)?._count
-				._all || 0;
-
-		const postWithVotes = {
+		// Since we included tags, we can map them directly
+		const postWithMappedTags = {
 			...post,
-			upVotes: upVotes,
-			downVotes: downVotes,
-			expiresInDays: Math.ceil(
-				(post.expiredAt.getTime() - new Date().getTime()) /
-					(1000 * 60 * 60 * 24)
-			),
-			userVote: null, // Newly created posts have no user vote
+			tags: post.tags.map((tag) => tag.name),
 		};
 
-		const postWithTagsAndVotes = await prisma.post
-			.findUnique({
-				where: { id: post.id },
-				include: { tags: true },
-			})
-			.then((fullPost) => ({
-				...postWithVotes,
-				tags: fullPost?.tags.map((tag) => tag.name) || [],
-			}));
+		// Add initial vote counts (0) and userVote (null) for the new post response
+		const responsePost: ProcessedPost = {
+			...postWithMappedTags,
+			upVotes: 0,
+			downVotes: 0,
+			expiresInDays: finalExpirationDays,
+			userVote: null,
+		};
 
-		return NextResponse.json(postWithTagsAndVotes, { status: 201 });
+		return NextResponse.json(responsePost, { status: 201 });
 	} catch (error) {
 		console.error("Error creating post:", String(error));
+		// Check for specific Prisma errors if needed
+		if (error instanceof Prisma.PrismaClientKnownRequestError) {
+			// Handle specific errors like unique constraint violations, etc.
+			return NextResponse.json(
+				{ error: `Database error: ${error.code}` },
+				{ status: 400 }
+			);
+		}
 		return NextResponse.json(
 			{ error: "Failed to create post" },
 			{ status: 500 }
@@ -122,19 +136,45 @@ export async function POST(request: Request) {
 	}
 }
 
+// --- GET Handler (Rewritten with Pagination) ---
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
-	const sortBy = searchParams.get("sortBy");
-	const timePeriod = searchParams.get("timePeriod");
+	const sortBy = searchParams.get("sortBy") ?? "hot"; // Default sort
+	const timePeriod = searchParams.get("timePeriod") ?? "day"; // Default time period
+	const pageParam = searchParams.get("page");
+	const limitParam = searchParams.get("limit");
 	const userId = (await cookies()).get("userId")?.value;
+
+	// --- Pagination Logic ---
+	let page = 1;
+	let limit = 20; // Default limit
+
+	if (pageParam) {
+		const parsedPage = parseInt(pageParam, 10);
+		if (!isNaN(parsedPage) && parsedPage > 0) {
+			page = parsedPage;
+		}
+	}
+	if (limitParam) {
+		const parsedLimit = parseInt(limitParam, 10);
+		// Add a reasonable max limit to prevent abuse
+		if (!isNaN(parsedLimit) && parsedLimit > 0 && parsedLimit <= 100) {
+			limit = parsedLimit;
+		}
+	}
+
+	const skip = (page - 1) * limit;
+	const take = limit;
+	// --- End Pagination Logic ---
 
 	try {
 		let orderBy: Prisma.PostOrderByWithRelationInput = {};
 		let where: Prisma.PostWhereInput = {
 			expiredAt: { gt: new Date() },
-			type: PostType.STANDARD,
+			type: PostType.STANDARD, // Only fetch standard posts for pagination
 		};
 
+		// --- Sorting and Filtering Logic ---
 		if (sortBy === "new") {
 			orderBy = { createdAt: "desc" };
 		} else if (sortBy === "top") {
@@ -143,35 +183,30 @@ export async function GET(request: Request) {
 					_count: "desc",
 				},
 			};
+			// Apply time period filter for 'top' sort
+			let dateFilter: Date | undefined;
 			if (timePeriod === "day") {
-				const oneDayAgo = new Date();
-				oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-				where = {
-					...where,
-					createdAt: { gte: oneDayAgo },
-				};
+				dateFilter = new Date();
+				dateFilter.setDate(dateFilter.getDate() - 1);
 			} else if (timePeriod === "week") {
-				const oneWeekAgo = new Date();
-				oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-				where = {
-					...where,
-					createdAt: { gte: oneWeekAgo },
-				};
+				dateFilter = new Date();
+				dateFilter.setDate(dateFilter.getDate() - 7);
 			} else if (timePeriod === "month") {
-				const oneMonthAgo = new Date();
-				oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-				where = {
-					...where,
-					createdAt: { gte: oneMonthAgo },
-				};
+				dateFilter = new Date();
+				dateFilter.setMonth(dateFilter.getMonth() - 1);
+			}
+			// Add 'all' timePeriod if needed, otherwise no date filter for 'top all'
+			if (dateFilter) {
+				where = { ...where, createdAt: { gte: dateFilter } };
 			}
 		} else if (sortBy === "hot") {
+			// Hot sort: combination of recent activity and votes
+			// Simple approach: Order by vote count within a recent timeframe
 			orderBy = {
 				votes: {
 					_count: "desc",
 				},
 			};
-			// Define a retrospective period to consider for hot posts
 			const retrospective = new Date();
 			retrospective.setDate(
 				retrospective.getDate() -
@@ -179,91 +214,130 @@ export async function GET(request: Request) {
 			);
 			where = {
 				...where,
-				// Consider posts created within the retrospective period
-				createdAt: { gte: retrospective },
-				// Consider posts that have received votes in the last 24 hours
-				votes: {
-					some: {
-						createdAt: {
-							gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
-						},
-					},
-				},
+				createdAt: { gte: retrospective }, // Consider recently created posts
+				// Optionally add filter for recent votes if needed for stricter 'hot' definition
+				// votes: { some: { createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } } }
 			};
 		}
+		// --- End Sorting and Filtering Logic ---
 
-		const posts = await prisma.post.findMany({
+		// --- Database Queries ---
+
+		// 1. Fetch Standard Posts (Paginated)
+		const standardPosts: PostWithRelations[] = await prisma.post.findMany({
+			skip,
+			take,
 			orderBy,
 			where,
 			include: {
 				tags: true,
 				votes: {
-					where: {
-						userId: userId,
-					},
+					// Include only the current user's vote
+					where: { userId: userId },
+					take: 1, // Optimization: only need one vote record per user
 				},
 			},
 		});
 
-		const pinnedPosts = await prisma.post.findMany({
-			where: {
-				expiredAt: { gt: new Date() },
-				type: PostType.PINNED,
-			},
-			include: {
-				tags: true,
-				votes: {
-					where: {
-						userId: userId,
+		// 2. Fetch Pinned Posts (Only for the first page)
+		let pinnedPosts: PostWithRelations[] = [];
+		if (page === 1) {
+			pinnedPosts = await prisma.post.findMany({
+				where: {
+					expiredAt: { gt: new Date() },
+					type: PostType.PINNED,
+				},
+				include: {
+					tags: true,
+					votes: {
+						// Include current user's vote for pinned posts too
+						where: { userId: userId },
+						take: 1,
 					},
 				},
-			},
-			orderBy: {
-				createdAt: "desc",
-			},
-		});
+				orderBy: {
+					createdAt: "desc", // Or desired order for pinned posts
+				},
+				// Pinned posts are usually few, so pagination might not be needed,
+				// but add take limit if necessary: take: 10
+			});
+		}
 
-		const allPosts = [...pinnedPosts, ...posts];
+		// 3. Combine Posts
+		const combinedPosts: PostWithRelations[] = [
+			...pinnedPosts,
+			...standardPosts,
+		];
 
-		// Fetch vote counts for all posts in one query
+		// If no posts found for this page, return empty array
+		if (combinedPosts.length === 0) {
+			return NextResponse.json([]);
+		}
+
+		// 4. Fetch Vote Counts (Only for posts on the current page)
+		const postIdsOnPage = combinedPosts.map((post) => post.id);
+		// Let TypeScript infer the type from the groupBy result
 		const voteCounts = await prisma.vote.groupBy({
 			by: ["postId", "type"],
 			where: {
 				postId: {
-					in: allPosts.map((post) => post.id),
+					in: postIdsOnPage,
 				},
 			},
 			_count: {
+				// Correct usage of _count
 				_all: true,
 			},
 		});
 
-		const postsWithDetails = allPosts.map((post) => {
-			const userVote = post.votes.length > 0 ? post.votes[0].type : null;
-			const upVotes =
-				voteCounts.find(
-					(vote) =>
-						vote.postId === post.id && vote.type === VoteType.UPVOTE
-				)?._count._all || 0;
-			const downVotes =
-				voteCounts.find(
-					(vote) =>
-						vote.postId === post.id &&
-						vote.type === VoteType.DOWNVOTE
-				)?._count._all || 0;
+		// --- End Database Queries ---
 
-			return {
-				...post,
-				tags: post.tags.map((tag) => tag.name),
-				upVotes: upVotes,
-				downVotes: downVotes,
-				expiresInDays: Math.ceil(
-					(post.expiredAt!.getTime() - new Date().getTime()) /
-						(1000 * 60 * 60 * 24)
-				),
-				userVote: userVote,
-			};
-		});
+		// --- Process Posts for Response ---
+		const postsWithDetails: ProcessedPost[] = combinedPosts.map(
+			(post: PostWithRelations) => {
+				// User's vote is directly available from the included relation
+				const userVote =
+					post.votes.length > 0 ? post.votes[0].type : null;
+
+				// Extract vote counts from the groupBy result
+				const upVotes =
+					voteCounts.find(
+						(count) =>
+							count.postId === post.id &&
+							count.type === VoteType.UPVOTE
+					)?._count._all || 0; // Use nullish coalescing and correct access
+				const downVotes =
+					voteCounts.find(
+						(count) =>
+							count.postId === post.id &&
+							count.type === VoteType.DOWNVOTE
+					)?._count._all || 0; // Use nullish coalescing and correct access
+
+				// Calculate expiresInDays
+				const expiresInDays = post.expiredAt
+					? Math.ceil(
+							(post.expiredAt.getTime() - new Date().getTime()) /
+								(1000 * 60 * 60 * 24)
+					  )
+					: 0; // Handle potentially null expiredAt if schema allows
+
+				// Construct the final post object matching ProcessedPost type
+				const processedPost: ProcessedPost = {
+					id: post.id,
+					createdAt: post.createdAt,
+					updatedAt: post.updatedAt,
+					content: post.content,
+					type: post.type,
+					tags: post.tags.map((tag: Tag) => tag.name),
+					upVotes: upVotes,
+					downVotes: downVotes,
+					expiresInDays: expiresInDays > 0 ? expiresInDays : 0, // Ensure non-negative
+					userVote: userVote,
+				};
+				return processedPost;
+			}
+		);
+		// --- End Processing Posts ---
 
 		return NextResponse.json(postsWithDetails);
 	} catch (error) {

@@ -9,3 +9,5 @@ export const SETTING_POST_MAX_POSTS_PER_HOUR = 5; // Maximum number of posts a u
 export const SETTING_POST_MAX_VOTES_PER_HOUR = 60; // Maximum number of votes a user can cast per hour
 export const SETTING_HOOKS_TOAST_LIMIT = 1; // Maximum number of toasts to display at once
 export const SETTING_HOOKS_TOAST_REMOVE_DELAY = 5000; // Delay in milliseconds before a toast automatically removes itself
+export const SETTING_POST_PAGE_SIZE = 10; // Defines the number of items to fetch per page in data requests.
+export const SETTING_POST_PREFETCH_DISTANCE = 10; // Defines how many pages ahead to prefetch data for smoother scrolling.

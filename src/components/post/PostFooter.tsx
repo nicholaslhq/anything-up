@@ -11,7 +11,7 @@ const PostFooter: React.FC<PostFooterProps> = ({ postFormRef }) => {
 	const isPostDetail = pathname?.startsWith("/posts/");
 
 	return (
-		<div className="flex items-center text-center text-sm text-text mb-10">
+		<div className="flex justify-center items-center text-center text-sm text-text my-4">
 			{isPostDetail ? (
 				<div className="flex flex-col gap-2">
 					<p>Your vote shapes AnythingUp for everyone else</p>
