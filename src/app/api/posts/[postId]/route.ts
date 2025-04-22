@@ -3,13 +3,10 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { PostType } from "@prisma/client";
 
-interface Params {
-	params: {
-		postId: string;
-	};
-}
-
-export async function GET(req: Request, { params }: Params) {
+export async function GET(
+	request: Request,
+	{ params }: { params: Promise<{ postId: string }> }
+) {
 	const userId = (await cookies()).get("userId")?.value;
 	const { postId } = await params;
 
@@ -31,7 +28,9 @@ export async function GET(req: Request, { params }: Params) {
 		});
 
 		if (!post) {
-			return new NextResponse("Post not found or expired", { status: 404 });
+			return new NextResponse("Post not found or expired", {
+				status: 404,
+			});
 		}
 
 		const userVote = post.votes.length > 0 ? post.votes[0].type : null;

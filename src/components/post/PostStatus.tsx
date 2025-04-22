@@ -11,13 +11,18 @@ interface PostStatusProps {
 	expired: boolean;
 }
 
-const PostStatus: React.FC<PostStatusProps> = ({ loading, error, empty, expired }) => {
+const PostStatus: React.FC<PostStatusProps> = ({
+	loading,
+	error,
+	empty,
+	expired,
+}) => {
 	if (loading) {
 		return <PostSkeleton />;
 	}
 
 	if (error) {
-		return <PostError message={error} />;
+		return <PostError />;
 	}
 
 	if (empty) {
