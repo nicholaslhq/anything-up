@@ -20,7 +20,7 @@ const Title: React.FC<TitleProps> = ({ setRefreshPosts, loading }) => {
 	return (
 		<Link href="/" onClick={handleClick}>
 			<h1
-				className="text-2xl font-bold text-text p-2"
+				className="text-2xl font-bold text-text"
 				onMouseEnter={() => setIsHovering(true)}
 				onMouseLeave={() => setIsHovering(false)}
 			>
