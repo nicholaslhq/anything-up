@@ -15,12 +15,14 @@ interface PostSubmissionFormProps {
 	handleSubmit: (event: React.FormEvent, tags: string[]) => Promise<boolean>;
 	content: string;
 	setContent: React.Dispatch<React.SetStateAction<string>>;
+	isSubmitting: boolean; // Add isSubmitting prop
 }
 
 const PostSubmissionForm = React.forwardRef<
 	HTMLFormElement,
 	PostSubmissionFormProps
->(({ handleSubmit, content, setContent }, ref) => {
+>(({ handleSubmit, content, setContent, isSubmitting }, ref) => {
+	// Destructure isSubmitting
 	const [postContentLength, setPostContentLength] = useState(0);
 	const [tagInputs, setTagInputs] = useState<string[]>([]);
 	const [tagErrors, setTagErrors] = useState<string[]>([]);
@@ -189,6 +191,7 @@ const PostSubmissionForm = React.forwardRef<
 				clearForm={clearForm}
 				tagErrors={tagErrors}
 				content={content}
+				loading={isSubmitting} // Pass isSubmitting as loading prop
 			/>
 		</form>
 	);

@@ -37,6 +37,7 @@ export default function Home() {
 	const [loading, setLoading] = useState(false); // Initial load loading
 	const [empty, setEmpty] = useState(false);
 	const [content, setContent] = useState("");
+	const [isSubmitting, setIsSubmitting] = useState(false); // Add submitting state
 	const [sortBy, setSortBy] = useState<string>("");
 	const [refreshPosts, setRefreshPosts] = useState(false);
 	const [timePeriod, setTimePeriod] = useState("day");
@@ -433,77 +434,88 @@ export default function Home() {
 			});
 			return false; // Indicate failure
 		}
-		const res = await fetch("/api/posts", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({
-				content,
-				tags,
-			}),
-		});
+		setIsSubmitting(true); // Set submitting to true
+		try {
+			const res = await fetch("/api/posts", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					content,
+					tags,
+				}),
+			});
 
-		if (res.status === 429) {
-			const errorData = await res.json();
-			if (errorData.error === "RATE_LIMIT_EXCEEDED") {
-				toast({
-					title: "Too many posts",
-					description:
-						"You're posting too frequently. Please try again later.",
-					variant: "destructive",
-				});
-				return false; // Indicate failure
+			if (res.status === 429) {
+				const errorData = await res.json();
+				if (errorData.error === "RATE_LIMIT_EXCEEDED") {
+					toast({
+						title: "Too many posts",
+						description:
+							"You're posting too frequently. Please try again later.",
+						variant: "destructive",
+					});
+					return false; // Indicate failure
+				}
 			}
-		}
 
-		if (!res.ok) {
-			const errorData = await res.json();
-			if (
-				res.status === 429 &&
-				errorData.error === "RATE_LIMIT_EXCEEDED"
-			) {
+			if (!res.ok) {
+				const errorData = await res.json();
+				if (
+					res.status === 429 &&
+					errorData.error === "RATE_LIMIT_EXCEEDED"
+				) {
+					toast({
+						title: "Too many posts",
+						description:
+							"You're posting too frequently. Please try again later.",
+						variant: "destructive",
+					});
+					return false; // Indicate failure
+				}
+				if (
+					res.status === 409 &&
+					errorData.error === "DUPLICATE_POST"
+				) {
+					toast({
+						title: "Duplicate Post",
+						description:
+							"You already have an active post with the same content.",
+						variant: "destructive",
+					});
+					return false; // Indicate failure
+				}
+				// Handle other non-OK responses
 				toast({
-					title: "Too many posts",
-					description:
-						"You're posting too frequently. Please try again later.",
+					title: "Submission Failed",
+					description: "Could not submit post.",
 					variant: "destructive",
 				});
 				return false; // Indicate failure
 			}
-			if (res.status === 409 && errorData.error === "DUPLICATE_POST") {
-				toast({
-					title: "Duplicate Post",
-					description:
-						"You already have an active post with the same content.",
-					variant: "destructive",
-				});
-				return false; // Indicate failure
-			}
-			// Handle other non-OK responses
+
+			// If submission was successful (res.ok is true)
+			toast({
+				title: "It’s Up!",
+				description: "Your world is up for everyone to see",
+			});
+
+			const newPost = await res.json();
+			// Add to standard posts, even if a filter is active. The filter useEffect will handle visibility.
+			setStandardPosts((prevPosts) => [newPost, ...prevPosts]);
+			return true; // Indicate success
+		} catch (error) {
+			console.error("Post submission failed:", error);
 			toast({
 				title: "Submission Failed",
-				description: "Could not submit post.",
+				description: "An unexpected error occurred.",
 				variant: "destructive",
 			});
 			return false; // Indicate failure
+		} finally {
+			setIsSubmitting(false); // Set submitting to false in finally block
 		}
-
-		// If submission was successful (res.ok is true)
-		toast({
-			title: "It’s Up!",
-			description: "Your world is up for everyone to see",
-		});
-
-		const newPost = await res.json();
-		// Add to standard posts, even if a filter is active. The filter useEffect will handle visibility.
-		setStandardPosts((prevPosts) => [newPost, ...prevPosts]);
-
-		// Content and tags will be cleared by the PostSubmissionForm component
-		// based on the success status returned by this function.
-		setEmpty(false); // No longer empty after posting
-
-		return true; // Indicate success
 	};
 
 	const handleTagClick = (tag: string) => {
@@ -539,6 +551,7 @@ export default function Home() {
 					content={content}
 					setContent={setContent}
 					ref={postFormRef}
+					isSubmitting={isSubmitting} // Pass submitting state
 				/>
 				{/* Initial Loading State (only when no posts loaded yet) */}
 				{loading &&

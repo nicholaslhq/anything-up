@@ -5,7 +5,7 @@ import {
 	PopoverTrigger,
 	PopoverContent,
 } from "@/components/ui/popover";
-import { Send, Eraser, PenLine } from "lucide-react";
+import { Send, Eraser, PenLine, LoaderCircle } from "lucide-react";
 
 interface PostFormActionProps {
 	postContentLength: number;
@@ -13,6 +13,7 @@ interface PostFormActionProps {
 	clearForm: () => void;
 	tagErrors: string[];
 	content: string;
+	loading: boolean; // Add loading prop
 }
 
 const PostFormAction: React.FC<PostFormActionProps> = ({
@@ -21,6 +22,7 @@ const PostFormAction: React.FC<PostFormActionProps> = ({
 	clearForm,
 	tagErrors,
 	content,
+	loading, // Destructure loading prop
 }) => {
 	const [open, setOpen] = useState(false);
 
@@ -36,7 +38,9 @@ const PostFormAction: React.FC<PostFormActionProps> = ({
 								<p>{maxContentLength}</p>
 							</div>
 							<div className="hidden sm:flex">
-								<p>{postContentLength}/{maxContentLength}</p>
+								<p>
+									{postContentLength}/{maxContentLength}
+								</p>
 							</div>
 						</div>
 					</Button>
@@ -62,10 +66,15 @@ const PostFormAction: React.FC<PostFormActionProps> = ({
 					className="[&_svg]:size-5"
 					disabled={
 						tagErrors.some((error) => error !== "") ||
-						content.trim() === ""
+						content.trim() === "" ||
+						loading // Disable when loading
 					}
 				>
-					<Send />
+					{loading ? (
+						<LoaderCircle className="animate-spin" /> // Show spinner when loading
+					) : (
+						<Send /> // Show send icon otherwise
+					)}
 				</Button>
 				<Button
 					type="button"
