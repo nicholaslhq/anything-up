@@ -25,6 +25,8 @@ model Post {
   @@index([expiredAt])
   @@index([type])
   @@index([userId])
+  @@index([upVotes])
+  @@index([downVotes])
 }
 
 model Vote {
