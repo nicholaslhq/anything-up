@@ -1,4 +1,4 @@
-import { PrismaClient, VoteType } from "@prisma/client";
+import { PrismaClient, VoteType, Prisma } from "@prisma/client";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
@@ -40,71 +40,85 @@ export async function POST(
 	}
 
 	try {
-		const existingVote = await prisma.vote.findFirst({
-			where: {
-				postId: postId,
-				userId: userId,
-			},
-		});
+		// Use a transaction to ensure atomicity
+		const result = await prisma.$transaction(async (tx) => {
+			const existingVote = await tx.vote.findFirst({
+				where: {
+					postId: postId,
+					userId: userId,
+				},
+			});
 
-		const expirationDate = new Date();
-		expirationDate.setDate(
-			expirationDate.getDate() + SETTING_POST_DEFAULT_EXPIRATION_DAYS
-		);
+			const expirationDate = new Date();
+			expirationDate.setDate(
+				expirationDate.getDate() + SETTING_POST_DEFAULT_EXPIRATION_DAYS
+			);
 
-		if (existingVote) {
-			if (existingVote.type === VoteType.UPVOTE) {
-				await prisma.vote.update({
-					where: {
-						id: existingVote.id,
-					},
-					data: {
-						type: VoteType.CANCELLED,
-					},
-				});
-				return new Response(
-					JSON.stringify({ message: "Upvote cancelled" }),
-					{
-						status: 200,
-						headers: { "Content-Type": "application/json" },
+			if (existingVote) {
+				if (existingVote.type === VoteType.UPVOTE) {
+					// --- Cancel existing upvote ---
+					await tx.vote.update({
+						where: {
+							id: existingVote.id,
+						},
+						data: {
+							type: VoteType.CANCELLED,
+						},
+					});
+					// Decrement post's upvote count
+					await tx.post.update({
+						where: { id: postId },
+						data: { upVotes: { decrement: 1 } },
+					});
+					return { message: "Upvote cancelled", status: 200 };
+				} else {
+					// --- Change existing vote (DOWNVOTE or CANCELLED) to UPVOTE ---
+					const previousVoteType = existingVote.type;
+					await tx.vote.update({
+						where: { id: existingVote.id },
+						data: { type: VoteType.UPVOTE },
+					});
+					// Prepare post update data
+					const postUpdateData: Prisma.PostUpdateInput = {
+						upVotes: { increment: 1 },
+					};
+					// If changing from DOWNVOTE, also decrement downvotes
+					if (previousVoteType === VoteType.DOWNVOTE) {
+						postUpdateData.downVotes = { decrement: 1 };
 					}
-				);
+					// Update post counts
+					await tx.post.update({
+						where: { id: postId },
+						data: postUpdateData,
+					});
+					return { message: "Vote changed to upvote", status: 200 };
+				}
 			} else {
-				await prisma.vote.update({
-					where: {
-						id: existingVote.id,
-					},
+				// --- Create new upvote ---
+				await tx.vote.create({
 					data: {
+						postId: postId,
+						userId: userId,
 						type: VoteType.UPVOTE,
 					},
 				});
-				return new Response(
-					JSON.stringify({ message: "Vote changed to upvote" }),
-					{
-						status: 200,
-						headers: { "Content-Type": "application/json" },
-					}
-				);
+				// Increment post's upvote count and update expiration
+				await tx.post.update({
+					where: { id: postId },
+					data: {
+						upVotes: { increment: 1 },
+						expiredAt: expirationDate,
+					},
+				});
+				return { message: "Upvoted successfully", status: 201 }; // Use 201 for creation
 			}
-		} else {
-			await prisma.vote.create({
-				data: {
-					postId: postId,
-					userId: userId,
-					type: VoteType.UPVOTE,
-				},
-			});
-			await prisma.post.update({
-				where: { id: postId },
-				data: {
-					expiredAt: expirationDate,
-				},
-			});
-			return new Response(JSON.stringify({ message: "Upvoted" }), {
-				status: 200,
-				headers: { "Content-Type": "application/json" },
-			});
-		}
+		});
+
+		// Return the response based on the transaction result
+		return NextResponse.json(
+			{ message: result.message },
+			{ status: result.status }
+		);
 	} catch (error: unknown) {
 		if (error instanceof Error) {
 			return new Response(JSON.stringify({ error: error.message }), {

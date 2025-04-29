@@ -13,6 +13,8 @@ model Post {
   content   String
   tags      Tag[]
   votes     Vote[]
+  upVotes   Int       @default(0)
+  downVotes Int       @default(0)
   userId    String
   type      PostType  @default(STANDARD)
   createdAt DateTime  @default(now())
@@ -21,6 +23,8 @@ model Post {
 
   @@index([createdAt])
   @@index([expiredAt])
+  @@index([type])
+  @@index([userId])
 }
 
 model Vote {
@@ -33,6 +37,8 @@ model Vote {
   updatedAt DateTime  @updatedAt
 
   @@unique([postId, userId])
+  @@index([postId])
+  @@index([postId, type])
 }
 
 model Tag {

@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { Post, Tag, Vote, PostType, Prisma, VoteType } from "@prisma/client"; // Added Post, Tag, Vote
+import { Post, Tag, Vote, PostType, Prisma, VoteType } from "@prisma/client";
 import { cookies } from "next/headers";
 import {
 	SETTING_POST_DEFAULT_EXPIRATION_DAYS,
@@ -13,16 +13,21 @@ import {
 // Type for the post structure including relations expected from findMany
 type PostWithRelations = Post & {
 	tags: Tag[];
-	votes: Vote[]; // Includes user's vote if userId is provided and matches
-};
-
-// Define the expected structure after processing for the API response
-// (Matches the structure expected by the frontend component)
-type ProcessedPost = Omit<Post, "userId" | "expiredAt" | "votes" | "tags"> & {
-	// Omit fields replaced or restructured
-	tags: string[];
+	votes: Vote[];
 	upVotes: number;
 	downVotes: number;
+};
+
+// Define the expected structure for the API response explicitly
+type ProcessedPost = {
+	id: string;
+	content: string;
+	createdAt: Date;
+	updatedAt: Date;
+	type: PostType;
+	upVotes: number;
+	downVotes: number;
+	tags: string[];
 	expiresInDays: number;
 	userVote: VoteType | null;
 };
@@ -200,9 +205,8 @@ export async function GET(request: Request) {
 			orderBy = { createdAt: "desc" };
 		} else if (sortBy === "top") {
 			orderBy = {
-				votes: {
-					_count: "desc",
-				},
+				upVotes: "desc",
+				downVotes: "asc",
 			};
 			// Apply time period filter for 'top' sort
 			let dateFilter: Date | undefined;
@@ -224,9 +228,8 @@ export async function GET(request: Request) {
 			// Hot sort: combination of recent activity and votes
 			// Simple approach: Order by vote count within a recent timeframe
 			orderBy = {
-				votes: {
-					_count: "desc",
-				},
+				upVotes: "desc",
+				downVotes: "asc",
 			};
 			const retrospective = new Date();
 			retrospective.setDate(
@@ -245,7 +248,8 @@ export async function GET(request: Request) {
 		// --- Database Queries ---
 
 		// 1. Fetch Standard Posts (Paginated)
-		const standardPosts: PostWithRelations[] = await prisma.post.findMany({
+		// Use include to get base Post fields + relations
+		const standardPosts = (await prisma.post.findMany({
 			skip,
 			take,
 			orderBy,
@@ -253,17 +257,17 @@ export async function GET(request: Request) {
 			include: {
 				tags: true,
 				votes: {
-					// Include only the current user's vote
 					where: { userId: userId },
-					take: 1, // Optimization: only need one vote record per user
+					take: 1,
 				},
 			},
-		});
+		})) as PostWithRelations[];
 
 		// 2. Fetch Pinned Posts (Only for the first page)
 		let pinnedPosts: PostWithRelations[] = [];
 		if (page === 1) {
-			pinnedPosts = await prisma.post.findMany({
+			// Use include and assert type
+			pinnedPosts = (await prisma.post.findMany({
 				where: {
 					expiredAt: { gt: new Date() },
 					type: PostType.PINNED,
@@ -271,7 +275,6 @@ export async function GET(request: Request) {
 				include: {
 					tags: true,
 					votes: {
-						// Include current user's vote for pinned posts too
 						where: { userId: userId },
 						take: 1,
 					},
@@ -281,7 +284,7 @@ export async function GET(request: Request) {
 				},
 				// Pinned posts are usually few, so pagination might not be needed,
 				// but add take limit if necessary: take: 10
-			});
+			})) as PostWithRelations[];
 		}
 
 		// 3. Combine Posts
@@ -295,22 +298,6 @@ export async function GET(request: Request) {
 			return NextResponse.json([]);
 		}
 
-		// 4. Fetch Vote Counts (Only for posts on the current page)
-		const postIdsOnPage = combinedPosts.map((post) => post.id);
-		// Let TypeScript infer the type from the groupBy result
-		const voteCounts = await prisma.vote.groupBy({
-			by: ["postId", "type"],
-			where: {
-				postId: {
-					in: postIdsOnPage,
-				},
-			},
-			_count: {
-				// Correct usage of _count
-				_all: true,
-			},
-		});
-
 		// --- End Database Queries ---
 
 		// --- Process Posts for Response ---
@@ -320,19 +307,7 @@ export async function GET(request: Request) {
 				const userVote =
 					post.votes.length > 0 ? post.votes[0].type : null;
 
-				// Extract vote counts from the groupBy result
-				const upVotes =
-					voteCounts.find(
-						(count) =>
-							count.postId === post.id &&
-							count.type === VoteType.UPVOTE
-					)?._count._all || 0; // Use nullish coalescing and correct access
-				const downVotes =
-					voteCounts.find(
-						(count) =>
-							count.postId === post.id &&
-							count.type === VoteType.DOWNVOTE
-					)?._count._all || 0; // Use nullish coalescing and correct access
+				// Use pre-calculated vote counts directly from the post object
 
 				// Calculate expiresInDays
 				const expiresInDays = post.expiredAt
@@ -350,8 +325,8 @@ export async function GET(request: Request) {
 					content: post.content,
 					type: post.type,
 					tags: post.tags.map((tag: Tag) => tag.name),
-					upVotes: upVotes,
-					downVotes: downVotes,
+					upVotes: post.upVotes,
+					downVotes: post.downVotes,
 					expiresInDays: expiresInDays > 0 ? expiresInDays : 0, // Ensure non-negative
 					userVote: userVote,
 				};
