@@ -18,7 +18,7 @@ export async function GET(
 				type: { not: PostType.RESTRICTED },
 			},
 			include: {
-				tags: true,
+				tags: { select: { name: true } },
 				votes: {
 					where: {
 						userId: userId,
@@ -38,18 +38,8 @@ export async function GET(
 		const postWithDetails = {
 			...post,
 			tags: post.tags.map((tag) => tag.name),
-			upVotes: await prisma.vote.count({
-				where: {
-					postId: post.id,
-					type: "UPVOTE",
-				},
-			}),
-			downVotes: await prisma.vote.count({
-				where: {
-					postId: post.id,
-					type: "DOWNVOTE",
-				},
-			}),
+			upVotes: post.upVotes,
+			downVotes: post.downVotes,
 			expiresInDays: Math.ceil(
 				(post.expiredAt!.getTime() - new Date().getTime()) /
 					(1000 * 60 * 60 * 24)

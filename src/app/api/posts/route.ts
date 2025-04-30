@@ -194,7 +194,7 @@ export async function GET(request: Request) {
 	// --- End Pagination Logic ---
 
 	try {
-		let orderBy: Prisma.PostOrderByWithRelationInput = {};
+		let orderBy: Prisma.PostOrderByWithRelationInput[] = [];
 		let where: Prisma.PostWhereInput = {
 			expiredAt: { gt: new Date() },
 			type: PostType.STANDARD, // Only fetch standard posts for pagination
@@ -202,12 +202,9 @@ export async function GET(request: Request) {
 
 		// --- Sorting and Filtering Logic ---
 		if (sortBy === "new") {
-			orderBy = { createdAt: "desc" };
+			orderBy = [{ createdAt: "desc" }];
 		} else if (sortBy === "top") {
-			orderBy = {
-				upVotes: "desc",
-				downVotes: "asc",
-			};
+			orderBy = [{ upVotes: "desc" }, { downVotes: "asc" }];
 			// Apply time period filter for 'top' sort
 			let dateFilter: Date | undefined;
 			if (timePeriod === "day") {
@@ -227,10 +224,7 @@ export async function GET(request: Request) {
 		} else if (sortBy === "hot") {
 			// Hot sort: combination of recent activity and votes
 			// Simple approach: Order by vote count within a recent timeframe
-			orderBy = {
-				upVotes: "desc",
-				downVotes: "asc",
-			};
+			orderBy = [{ upVotes: "desc" }, { downVotes: "asc" }];
 			const retrospective = new Date();
 			retrospective.setDate(
 				retrospective.getDate() -
@@ -255,7 +249,7 @@ export async function GET(request: Request) {
 			orderBy,
 			where,
 			include: {
-				tags: true,
+				tags: { select: { name: true } },
 				votes: {
 					where: { userId: userId },
 					take: 1,
@@ -273,7 +267,7 @@ export async function GET(request: Request) {
 					type: PostType.PINNED,
 				},
 				include: {
-					tags: true,
+					tags: { select: { name: true } },
 					votes: {
 						where: { userId: userId },
 						take: 1,

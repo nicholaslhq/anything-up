@@ -27,6 +27,7 @@ model Post {
   @@index([userId])
   @@index([upVotes])
   @@index([downVotes])
+  @@index([type, expiredAt, createdAt, upVotes, downVotes])
 }
 
 model Vote {
@@ -41,6 +42,7 @@ model Vote {
   @@unique([postId, userId])
   @@index([postId])
   @@index([postId, type])
+  @@index([userId, createdAt])
 }
 
 model Tag {
