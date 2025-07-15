@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowBigUp, ArrowBigDown, Frown, Annoyed, Meh } from "lucide-react";
+import { ArrowBigUp, ArrowBigDown, Frown, SmilePlus, Meh } from "lucide-react";
 import PostVoteCount from "@/components/post/PostVoteCount";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -35,7 +35,9 @@ const PostVote: React.FC<PostVoteProps> = ({
 	const [localUpVotes, setLocalUpVotes] = useState(initialUpVotes);
 	const [localDownVotes, setLocalDownVotes] = useState(initialDownVotes);
 	const [localUserVote, setLocalUserVote] = useState(initialUserVote);
-	const postUrl = postId ? `${window.location.origin}/posts/${postId}` : undefined;
+	const postUrl = postId
+		? `${window.location.origin}/posts/${postId}`
+		: undefined;
 	const { toast } = useToast();
 
 	const onUpvoteClick = async () => {
@@ -44,14 +46,14 @@ const PostVote: React.FC<PostVoteProps> = ({
 		const originalUserVote = localUserVote;
 
 		if (localUserVote === "UPVOTE") {
-			setLocalUpVotes(prev => prev - 1);
+			setLocalUpVotes((prev) => prev - 1);
 			setLocalUserVote(null);
 		} else if (localUserVote === "DOWNVOTE") {
-			setLocalUpVotes(prev => prev + 1);
-			setLocalDownVotes(prev => prev - 1);
+			setLocalUpVotes((prev) => prev + 1);
+			setLocalDownVotes((prev) => prev - 1);
 			setLocalUserVote("UPVOTE");
 		} else {
-			setLocalUpVotes(prev => prev + 1);
+			setLocalUpVotes((prev) => prev + 1);
 			setLocalUserVote("UPVOTE");
 		}
 
@@ -75,14 +77,14 @@ const PostVote: React.FC<PostVoteProps> = ({
 		const originalUserVote = localUserVote;
 
 		if (localUserVote === "DOWNVOTE") {
-			setLocalDownVotes(prev => prev - 1);
+			setLocalDownVotes((prev) => prev - 1);
 			setLocalUserVote(null);
 		} else if (localUserVote === "UPVOTE") {
-			setLocalDownVotes(prev => prev + 1);
-			setLocalUpVotes(prev => prev - 1);
+			setLocalDownVotes((prev) => prev + 1);
+			setLocalUpVotes((prev) => prev - 1);
 			setLocalUserVote("DOWNVOTE");
 		} else {
-			setLocalDownVotes(prev => prev + 1);
+			setLocalDownVotes((prev) => prev + 1);
 			setLocalUserVote("DOWNVOTE");
 		}
 
@@ -112,7 +114,7 @@ const PostVote: React.FC<PostVoteProps> = ({
 				</Button>
 			) : empty ? (
 				<Button variant="neutral" className="w-full" disabled={empty}>
-					<Annoyed />
+					<SmilePlus />
 				</Button>
 			) : expired ? (
 				<Button variant="neutral" className="w-full" disabled={expired}>
@@ -136,7 +138,9 @@ const PostVote: React.FC<PostVoteProps> = ({
 					<ArrowBigUp />
 				</Button>
 				<Button
-					variant={localUserVote === "DOWNVOTE" ? "default" : "neutral"}
+					variant={
+						localUserVote === "DOWNVOTE" ? "default" : "neutral"
+					}
 					onClick={onDownvoteClick}
 					size={"mobileIcon"}
 					disabled={loading || error || empty || expired}
