@@ -85,7 +85,7 @@ const PostFormAction: React.FC<PostFormActionProps> = ({
 						e.preventDefault();
 						clearForm();
 					}}
-					disabled={content.trim() === ""}
+					disabled={content.trim() === "" || loading}
 				>
 					<Eraser />
 				</Button>
