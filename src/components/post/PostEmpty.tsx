@@ -7,7 +7,7 @@ const PostEmpty = () => {
 		<div className="flex gap-3 md:gap-5 w-full sm:max-w-lg">
 			<Card className="flex-1">
 				<CardHeader>
-					<p>Nothing up right now. Create one?</p>
+					<p>Nothing up right now. Got AnythingUp to share?</p>
 				</CardHeader>
 			</Card>
 			<PostVote
