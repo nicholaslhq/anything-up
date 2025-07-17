@@ -204,14 +204,6 @@ export async function GET(request: Request) {
 			type: PostType.STANDARD, // Only fetch standard posts for pagination
 		};
 
-		// Exclude pinned posts from standard post query to avoid overlap
-		where = {
-			...where,
-			type: {
-				not: PostType.PINNED,
-			},
-		};
-
 		if (tag) {
 			where = {
 				...where,
