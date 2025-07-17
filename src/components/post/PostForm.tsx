@@ -77,13 +77,24 @@ const PostSubmissionForm = React.forwardRef<
 			.map((input) => input.trim())
 			.filter((tag) => tag !== "");
 		const uniqueTagsToAdd = [...new Set(tagsToAdd)]; // Eliminate duplicates
+
+		// Store current values before clearing
+		const originalContent = content;
+		const originalPostContentLength = postContentLength;
+		const originalTagInputs = [...tagInputs];
+		const originalTagErrors = [...tagErrors];
+
+		clearForm();
+
 		const success = await handleSubmit(event, uniqueTagsToAdd);
 		if (success) {
-			setContent("");
-			setPostContentLength(0);
-			setTagInputs([]);
-			setTagErrors([]);
 			window.scrollTo({ top: 0, behavior: "smooth" });
+		} else {
+			// Revert to original values if submission failed
+			setContent(originalContent);
+			setPostContentLength(originalPostContentLength);
+			setTagInputs(originalTagInputs);
+			setTagErrors(originalTagErrors);
 		}
 	};
 
