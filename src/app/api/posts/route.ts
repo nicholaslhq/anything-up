@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { Post, Tag, Vote, PostType, Prisma, VoteType } from "@prisma/client";
+import { Post, PostType, Prisma, VoteType } from "@prisma/client";
 import { cookies } from "next/headers";
 import {
 	SETTING_POST_DEFAULT_EXPIRATION_DAYS,
@@ -8,14 +8,17 @@ import {
 	SETTING_POST_MAX_POSTS_PER_HOUR,
 } from "@/lib/settings";
 
+// --- Caching for Pinned Posts ---
+let cachedPinnedPosts: PostWithRelations[] | null = null;
+let pinnedPostsCacheTimestamp: number = 0;
+const PINNED_POST_CACHE_TTL = 60 * 60 * 1000; // 60 minutes
+
 // --- Type Definitions ---
 
 // Type for the post structure including relations expected from findMany
 type PostWithRelations = Post & {
-	tags: Tag[];
-	votes: Vote[];
-	upVotes: number;
-	downVotes: number;
+	tags: { name: string }[];
+	votes: { type: VoteType }[];
 };
 
 // Define the expected structure for the API response explicitly
@@ -254,48 +257,78 @@ export async function GET(request: Request) {
 		// --- Database Queries ---
 
 		// 1. Fetch Standard Posts (Paginated)
-		// Use include to get base Post fields + relations
+		// Use select to fetch only necessary fields for standard posts
 		const standardPosts = (await prisma.post.findMany({
 			skip,
 			take,
 			orderBy,
 			where,
-			include: {
+			select: {
+				id: true,
+				content: true,
+				createdAt: true,
+				updatedAt: true,
+				type: true,
+				upVotes: true,
+				downVotes: true,
+				expiredAt: true,
 				tags: { select: { name: true } },
 				votes: {
 					where: { userId: userId },
 					take: 1,
+					select: { type: true },
 				},
 			},
 		})) as PostWithRelations[];
 
-		// 2. Fetch Pinned Posts (Only for the first page)
+		// 2. Fetch Pinned Posts (Only for the first page, with caching)
 		let pinnedPosts: PostWithRelations[] = [];
 		if (page === 1) {
-			// Use include and assert type
-			pinnedPosts = (await prisma.post.findMany({
-				where: {
-					expiredAt: { gt: new Date() },
-					type: PostType.PINNED,
-				},
-				include: {
-					tags: { select: { name: true } },
-					votes: {
-						where: { userId: userId },
-						take: 1,
+			const now = Date.now();
+			if (
+				!cachedPinnedPosts ||
+				now - pinnedPostsCacheTimestamp > PINNED_POST_CACHE_TTL
+			) {
+				// Cache miss or expired, fetch from DB
+				pinnedPosts = (await prisma.post.findMany({
+					where: {
+						expiredAt: { gt: new Date() },
+						type: PostType.PINNED,
 					},
-				},
-				orderBy: {
-					createdAt: "desc", // Or desired order for pinned posts
-				},
-				// Pinned posts are usually few, so pagination might not be needed,
-				// but add take limit if necessary: take: 10
-			})) as PostWithRelations[];
+					select: {
+						id: true,
+						content: true,
+						createdAt: true,
+						updatedAt: true,
+						type: true,
+						upVotes: true,
+						downVotes: true,
+						expiredAt: true,
+						tags: { select: { name: true } },
+						votes: {
+							where: { userId: userId },
+							take: 1,
+							select: { type: true },
+						},
+					},
+					orderBy: {
+						createdAt: "desc", // Or desired order for pinned posts
+					},
+				})) as PostWithRelations[];
+				cachedPinnedPosts = pinnedPosts;
+				pinnedPostsCacheTimestamp = now;
+			} else {
+				// Cache hit, use cached data
+				pinnedPosts = cachedPinnedPosts;
+			}
 		}
 
 		// 3. Combine Posts
+		// Ensure pinned posts are unique and appear first
 		const combinedPosts: PostWithRelations[] = [
-			...pinnedPosts,
+			...pinnedPosts.filter(
+				(p) => !standardPosts.some((sp) => sp.id === p.id)
+			),
 			...standardPosts,
 		];
 
@@ -330,7 +363,7 @@ export async function GET(request: Request) {
 					updatedAt: post.updatedAt,
 					content: post.content,
 					type: post.type,
-					tags: post.tags.map((tag: Tag) => tag.name),
+					tags: post.tags.map((tag) => tag.name),
 					upVotes: post.upVotes,
 					downVotes: post.downVotes,
 					expiresInDays: expiresInDays > 0 ? expiresInDays : 0, // Ensure non-negative
