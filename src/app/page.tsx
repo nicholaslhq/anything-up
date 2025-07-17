@@ -31,7 +31,6 @@ export interface Post {
 }
 
 export default function Home() {
-	const [pinnedPosts, setPinnedPosts] = useState<PostType[]>([]);
 	const [standardPosts, setStandardPosts] = useState<PostType[]>([]);
 	const [loading, setLoading] = useState(false); // Initial load loading
 	const loadingRef = useRef(loading); // Ref to track loading state for timeout
@@ -39,6 +38,7 @@ export default function Home() {
 	const [content, setContent] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false); // Add submitting state
 	const [sortBy, setSortBy] = useState<string>("");
+	const [isSortByInitialized, setIsSortByInitialized] = useState(false); // New state to track sortBy initialization
 	const [refreshPosts, setRefreshPosts] = useState(false);
 	const [timePeriod, setTimePeriod] = useState("day");
 	const [error, setError] = useState<string | null>(null); // Initial load error
@@ -94,18 +94,15 @@ export default function Home() {
 					}
 				}
 
-				const newPosts: PostType[] = await res.json();
+				const { posts: newPosts, totalPosts: newTotalPosts } =
+					await res.json(); // Destructure posts and totalPosts
 				// console.log("More posts received:", newPosts.length);
 
 				// Filter out potential duplicates
 				const uniqueNewPosts = newPosts.filter(
-					(newPost) =>
+					(newPost: PostType) =>
 						!standardPosts.some(
 							(existingPost) => existingPost.id === newPost.id
-						) &&
-						!pinnedPosts.some(
-							(existingPinnedPost) =>
-								existingPinnedPost.id === newPost.id
 						)
 				);
 
@@ -115,8 +112,8 @@ export default function Home() {
 				]);
 				setPage(nextPage);
 				setHasMore(
-					uniqueNewPosts.length === SETTING_POST_PREFETCH_DISTANCE
-				); // Check if the batch was full
+					standardPosts.length + uniqueNewPosts.length < newTotalPosts
+				); // Check if there are more posts based on total count
 				setLoadMoreError(null); // Clear error on success
 				setLoadingMore(false); // Set loading false on success
 			} catch (e: unknown) {
@@ -136,7 +133,6 @@ export default function Home() {
 					return; // Exit
 				}
 			}
-			// }, [page, hasMore, loading, loadingMore, sortBy, timePeriod, standardPosts, pinnedPosts]); // Dependencies for useCallback
 		},
 		[
 			page,
@@ -147,9 +143,8 @@ export default function Home() {
 			timePeriod,
 			selectedTag,
 			standardPosts,
-			pinnedPosts,
 		]
-	); // Removed fetchMorePosts from its own dependency array
+	);
 
 	const observer = useRef<IntersectionObserver | null>(null); // Initialize with null
 	const lastPostElementRef = useCallback(
@@ -188,91 +183,84 @@ export default function Home() {
 		} else {
 			setSortBy("hot");
 		}
+		setIsSortByInitialized(true); // Set to true after sortBy is initialized
 	}, []);
 
 	useEffect(() => {
 		setIsUserIdAvailable(true);
 	}, []);
 
+	// --- New Function: fetchInitialPosts ---
+	const fetchInitialPosts = useCallback(async () => {
+		// Wrapped in useCallback
+		setLoading(true);
+		setError(null);
+		setEmpty(false);
+		setPage(1); // Reset page to 1 for initial fetch
+		setHasMore(true); // Assume there's more until proven otherwise
+		setLoadMoreError(null); // Clear any previous load more errors
+
+		const timeoutId = setTimeout(() => {
+			if (loadingRef.current) {
+				// Only show timeout if still loading
+				setError("Loading is taking longer than expected...");
+			}
+		}, SETTING_POST_LOADING_TIMEOUT);
+
+		try {
+			const tagQuery = selectedTag ? `&tag=${selectedTag}` : ""; // Add tag query parameter
+			const res = await fetch(
+				`/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}&page=1&limit=${SETTING_POST_PAGE_SIZE}${tagQuery}`
+			);
+
+			if (!res.ok) {
+				const message = `Failed to load posts: ${res.status} ${res.statusText}`;
+				setError(message);
+				setEmpty(true); // Consider it empty if initial load fails
+				setHasMore(false); // No more posts if initial load fails
+				return;
+			}
+
+			const { posts, totalPosts } = await res.json(); // Destructure posts and totalPosts
+			clearTimeout(timeoutId); // Clear timeout on successful fetch
+
+			if (posts.length === 0) {
+				setEmpty(true);
+				setStandardPosts([]);
+				setHasMore(false);
+			} else {
+				setStandardPosts(posts);
+				setEmpty(false);
+				// Check if there are more posts based on total count
+				setHasMore(posts.length < totalPosts);
+			}
+			setError(null); // Clear error on success
+		} catch (e: unknown) {
+			clearTimeout(timeoutId); // Clear timeout on error
+			console.error("Failed to fetch initial posts:", e);
+			setError("Failed to load posts. Please check your connection.");
+			setEmpty(true); // Consider it empty if initial load fails
+			setHasMore(false); // No more posts if initial load fails
+		} finally {
+			setLoading(false);
+		}
+	}, [sortBy, timePeriod, isUserIdAvailable, refreshPosts, selectedTag]); // Dependencies for useCallback
+
 	// --- Modified Initial Fetch useEffect ---
 	useEffect(() => {
-		if (!isUserIdAvailable || !sortBy) {
-			// Ensure sortBy is also available
-			return;
+		if (isSortByInitialized) {
+			// Only fetch if sortBy has been initialized
+			fetchInitialPosts();
 		}
-
-		const fetchInitialPosts = async () => {
-			setLoading(true);
-			setError(null);
-			setPinnedPosts([]); // Clear pinned posts on new initial fetch
-			setStandardPosts([]); // Clear standard posts on new initial fetch
-			setPage(1); // Reset page number for new sort/filter
-			setHasMore(true); // Assume there are more posts initially
-			setLoadMoreError(null); // Clear load more error
-			setLoadingMore(false); // Ensure loading more is false
-			const timeoutId = setTimeout(() => {
-				if (loadingRef.current) {
-					// Check if still loading using ref
-					setError(
-						"Failed to load posts. Please check your connection."
-					);
-					setLoading(false);
-					setHasMore(false);
-				}
-			}, SETTING_POST_LOADING_TIMEOUT);
-
-			try {
-				// Fetch initial batch
-				const tagQuery = selectedTag ? `&tag=${selectedTag}` : ""; // Add tag query parameter
-				const res = await fetch(
-					`/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}&page=1&limit=${SETTING_POST_PAGE_SIZE}${tagQuery}`
-				);
-				clearTimeout(timeoutId); // Clear timeout on successful response start
-
-				if (!res.ok) {
-					const message = `Failed to fetch posts: ${res.status} ${res.statusText}`;
-					setError(message);
-					setHasMore(false); // Stop trying if initial fetch fails
-				} else {
-					const data: PostType[] = await res.json();
-					// console.log("Initial posts received:", data.length);
-					const pinnedPostsData = data.filter(
-						(post) => post.type === "PINNED"
-					);
-					const standardPostsData = data.filter(
-						(post) => post.type === "STANDARD"
-					);
-
-					setPinnedPosts(pinnedPostsData);
-					setStandardPosts(standardPostsData); // Set initial standard posts
-					// Filtering will be handled by the other useEffect
-
-					setEmpty(
-						pinnedPostsData.length === 0 &&
-							standardPostsData.length === 0
-					);
-					// Determine hasMore based on standard posts only, as pinned are separate
-					setHasMore(
-						standardPostsData.length === SETTING_POST_PAGE_SIZE
-					);
-					// setExpired(false); // Removed - setExpired is not defined
-					setError(null); // Clear error on success
-				}
-			} catch (e: unknown) {
-				clearTimeout(timeoutId); // Clear timeout on error
-				console.error("Failed to fetch initial posts:", e);
-				setError("Failed to load posts. Please check your connection.");
-				setHasMore(false); // Stop trying on catch
-			} finally {
-				setLoading(false);
-				setRefreshPosts(false); // Reset refresh trigger
-			}
-		};
-
-		fetchInitialPosts();
-	}, [sortBy, timePeriod, isUserIdAvailable, refreshPosts, selectedTag]);
-
-	// --- fetchMorePosts is now defined above lastPostElementRef ---
+	}, [
+		sortBy,
+		timePeriod,
+		isUserIdAvailable,
+		refreshPosts,
+		selectedTag,
+		fetchInitialPosts,
+		isSortByInitialized, // Add as dependency
+	]);
 
 	const handleUpvote = async (postId: string) => {
 		const res = await fetch(`/api/posts/${postId}/upvote`, {
@@ -299,28 +287,6 @@ export default function Home() {
 			return; // Don't update UI if vote failed server-side
 		}
 		setStandardPosts((prevPosts) =>
-			prevPosts.map((post) => {
-				if (post.id === postId) {
-					const alreadyUpvoted = post.userVote === "UPVOTE";
-					const alreadyDownvoted = post.userVote === "DOWNVOTE";
-					return {
-						...post,
-						userVote: alreadyUpvoted ? null : "UPVOTE",
-						upVotes: alreadyUpvoted
-							? post.upVotes - 1
-							: alreadyDownvoted
-							? post.upVotes + 1
-							: post.upVotes + 1,
-						downVotes: alreadyDownvoted
-							? post.downVotes - 1
-							: post.downVotes,
-					};
-				}
-				return post;
-			})
-		);
-		// Also update pinned posts if the upvoted post was pinned
-		setPinnedPosts((prevPosts) =>
 			prevPosts.map((post) => {
 				if (post.id === postId) {
 					const alreadyUpvoted = post.userVote === "UPVOTE";
@@ -368,28 +334,6 @@ export default function Home() {
 			return; // Don't update UI if vote failed server-side
 		}
 		setStandardPosts((prevPosts) =>
-			prevPosts.map((post) => {
-				if (post.id === postId) {
-					const alreadyUpvoted = post.userVote === "UPVOTE";
-					const alreadyDownvoted = post.userVote === "DOWNVOTE";
-					return {
-						...post,
-						userVote: alreadyDownvoted ? null : "DOWNVOTE",
-						downVotes: alreadyDownvoted
-							? post.downVotes - 1
-							: alreadyUpvoted
-							? post.downVotes + 1
-							: post.downVotes + 1,
-						upVotes: alreadyUpvoted
-							? post.upVotes - 1
-							: post.upVotes,
-					};
-				}
-				return post;
-			})
-		);
-		// Also update pinned posts if the downvoted post was pinned
-		setPinnedPosts((prevPosts) =>
 			prevPosts.map((post) => {
 				if (post.id === postId) {
 					const alreadyUpvoted = post.userVote === "UPVOTE";
@@ -545,63 +489,38 @@ export default function Home() {
 					isSubmitting={isSubmitting} // Pass submitting state
 				/>
 				{/* Initial Loading State (only when no posts loaded yet) */}
-				{loading &&
-					standardPosts.length === 0 &&
-					pinnedPosts.length === 0 && (
-						<div className="w-full sm:max-w-lg">
-							<PostStatus
-								loading={true}
-								error={null}
-								empty={false}
-								expired={false}
-							/>
-						</div>
-					)}
-				{/* Initial Error State (only when no posts loaded yet) */}
-				{error &&
-					standardPosts.length === 0 &&
-					pinnedPosts.length === 0 && (
-						<div className="w-full sm:max-w-lg">
-							<PostStatus
-								loading={false}
-								error={error}
-								empty={false}
-								expired={false}
-							/>
-						</div>
-					)}
-				{/* Empty State (only when truly empty and not loading/erroring) */}
-				{empty &&
-					!loading &&
-					!error &&
-					standardPosts.length === 0 &&
-					pinnedPosts.length === 0 && (
-						<div className="w-full sm:max-w-lg">
-							<PostStatus
-								loading={false}
-								error={null}
-								empty={true}
-								expired={false}
-							/>
-						</div>
-					)}
-				{/* Pinned Posts */}
-				{pinnedPosts.map((post) => (
-					<div
-						key={`pinned-${post.id}`}
-						className="flex w-full sm:max-w-lg"
-					>
-						{" "}
-						{/* Added prefix to key */}
-						<PostComponent
-							post={post}
-							handleUpvote={handleUpvote}
-							handleDownvote={handleDownvote}
-							onTagClick={handleTagClick}
-							selectedTag={selectedTag}
+				{loading && standardPosts.length === 0 && (
+					<div className="w-full sm:max-w-lg">
+						<PostStatus
+							loading={true}
+							error={null}
+							empty={false}
+							expired={false}
 						/>
 					</div>
-				))}
+				)}
+				{/* Initial Error State (only when no posts loaded yet) */}
+				{error && standardPosts.length === 0 && (
+					<div className="w-full sm:max-w-lg">
+						<PostStatus
+							loading={false}
+							error={error}
+							empty={false}
+							expired={false}
+						/>
+					</div>
+				)}
+				{/* Empty State (only when truly empty and not loading/erroring) */}
+				{empty && !loading && !error && standardPosts.length === 0 && (
+					<div className="w-full sm:max-w-lg">
+						<PostStatus
+							loading={false}
+							error={null}
+							empty={true}
+							expired={false}
+						/>
+					</div>
+				)}
 				{/* Standard/Filtered Posts List */}
 				{postsToRender.map((post, index) => {
 					// Attach the ref to the *second to last* post for earlier trigger, or adjust threshold
@@ -661,7 +580,7 @@ export default function Home() {
 					!loading &&
 					!error &&
 					!empty &&
-					(pinnedPosts.length > 0 || standardPosts.length > 0) && ( // Show if not loading/erroring, not empty, and no more pages
+					standardPosts.length > 0 && ( // Show if not loading/erroring, not empty, and no more pages
 						<PostFooter postFormRef={postFormRef} />
 					)}
 			</main>

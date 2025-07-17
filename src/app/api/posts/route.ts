@@ -204,6 +204,14 @@ export async function GET(request: Request) {
 			type: PostType.STANDARD, // Only fetch standard posts for pagination
 		};
 
+		// Exclude pinned posts from standard post query to avoid overlap
+		where = {
+			...where,
+			type: {
+				not: PostType.PINNED,
+			},
+		};
+
 		if (tag) {
 			where = {
 				...where,
@@ -257,8 +265,8 @@ export async function GET(request: Request) {
 		// --- Database Queries ---
 
 		// 1. Fetch Standard Posts (Paginated)
-		// Use select to fetch only necessary fields for standard posts
-		const standardPosts = (await prisma.post.findMany({
+		// 1. Prepare concurrent database queries
+		const standardPostsQuery = prisma.post.findMany({
 			skip,
 			take,
 			orderBy,
@@ -272,6 +280,7 @@ export async function GET(request: Request) {
 				upVotes: true,
 				downVotes: true,
 				expiredAt: true,
+				userId: true, // Added userId
 				tags: { select: { name: true } },
 				votes: {
 					where: { userId: userId },
@@ -279,22 +288,32 @@ export async function GET(request: Request) {
 					select: { type: true },
 				},
 			},
-		})) as PostWithRelations[];
+		});
 
-		// 2. Fetch Pinned Posts (Only for the first page, with caching)
-		let pinnedPosts: PostWithRelations[] = [];
+		let pinnedPostsQuery: Promise<PostWithRelations[]> = Promise.resolve(
+			[]
+		);
+		let totalPostsCountQuery: Promise<number> = Promise.resolve(0);
+
 		if (page === 1) {
 			const now = Date.now();
-			if (
-				!cachedPinnedPosts ||
-				now - pinnedPostsCacheTimestamp > SETTING_POST_PINNED_CACHE_TTL
-			) {
-				// Cache miss or expired, fetch from DB
-				pinnedPosts = (await prisma.post.findMany({
-					where: {
-						expiredAt: { gt: new Date() },
-						type: PostType.PINNED,
+			if (tag) {
+				// If a tag is present, always fetch fresh and do not use cache
+				// Also, clear the cache to ensure no stale unfiltered data is used later
+				cachedPinnedPosts = null;
+				pinnedPostsCacheTimestamp = 0;
+
+				const pinnedWhere: Prisma.PostWhereInput = {
+					expiredAt: { gt: new Date() },
+					type: PostType.PINNED,
+					tags: {
+						some: {
+							name: tag,
+						},
 					},
+				};
+				pinnedPostsQuery = prisma.post.findMany({
+					where: pinnedWhere,
 					select: {
 						id: true,
 						content: true,
@@ -304,6 +323,7 @@ export async function GET(request: Request) {
 						upVotes: true,
 						downVotes: true,
 						expiredAt: true,
+						userId: true,
 						tags: { select: { name: true } },
 						votes: {
 							where: { userId: userId },
@@ -312,29 +332,82 @@ export async function GET(request: Request) {
 						},
 					},
 					orderBy: {
-						createdAt: "desc", // Or desired order for pinned posts
+						createdAt: "desc",
 					},
-				})) as PostWithRelations[];
-				cachedPinnedPosts = pinnedPosts;
-				pinnedPostsCacheTimestamp = now;
+				}) as Promise<PostWithRelations[]>;
 			} else {
-				// Cache hit, use cached data
-				pinnedPosts = cachedPinnedPosts;
+				// No tag, use caching logic
+				if (
+					!cachedPinnedPosts ||
+					now - pinnedPostsCacheTimestamp >
+						SETTING_POST_PINNED_CACHE_TTL
+				) {
+					const pinnedWhere: Prisma.PostWhereInput = {
+						// This will be for unfiltered pinned posts
+						expiredAt: { gt: new Date() },
+						type: PostType.PINNED,
+					};
+					pinnedPostsQuery = prisma.post.findMany({
+						where: pinnedWhere,
+						select: {
+							id: true,
+							content: true,
+							createdAt: true,
+							updatedAt: true,
+							type: true,
+							upVotes: true,
+							downVotes: true,
+							expiredAt: true,
+							userId: true,
+							tags: { select: { name: true } },
+							votes: {
+								where: { userId: userId },
+								take: 1,
+								select: { type: true },
+							},
+						},
+						orderBy: {
+							createdAt: "desc",
+						},
+					}) as Promise<PostWithRelations[]>;
+				} else {
+					pinnedPostsQuery = Promise.resolve(cachedPinnedPosts);
+				}
 			}
 		}
 
-		// 3. Combine Posts
-		// Ensure pinned posts are unique and appear first
+		// Fetch total count for pagination
+		totalPostsCountQuery = prisma.post.count({
+			where: {
+				...where,
+				type: {
+					not: PostType.PINNED, // Count only standard posts
+				},
+			},
+		});
+
+		// Execute all queries concurrently
+		const [standardPosts, pinnedPosts, totalPostsCount] = await Promise.all(
+			[standardPostsQuery, pinnedPostsQuery, totalPostsCountQuery]
+		);
+
+		// Update pinned posts cache if it was a cache miss AND no tag was present
+		if (page === 1 && !tag && !cachedPinnedPosts) {
+			// Only cache if no tag is present
+			cachedPinnedPosts = pinnedPosts;
+			pinnedPostsCacheTimestamp = Date.now();
+		}
+
+		// Combine Posts - Ensure pinned posts are unique and appear first
+		const standardPostIds = new Set(standardPosts.map((p) => p.id));
 		const combinedPosts: PostWithRelations[] = [
-			...pinnedPosts.filter(
-				(p) => !standardPosts.some((sp) => sp.id === p.id)
-			),
+			...pinnedPosts.filter((p) => !standardPostIds.has(p.id)),
 			...standardPosts,
 		];
 
 		// If no posts found for this page, return empty array
-		if (combinedPosts.length === 0) {
-			return NextResponse.json([]);
+		if (combinedPosts.length === 0 && totalPostsCount === 0) {
+			return NextResponse.json({ posts: [], totalPosts: 0 });
 		}
 
 		// --- End Database Queries ---
@@ -374,7 +447,10 @@ export async function GET(request: Request) {
 		);
 		// --- End Processing Posts ---
 
-		return NextResponse.json(postsWithDetails);
+		return NextResponse.json({
+			posts: postsWithDetails,
+			totalPosts: totalPostsCount,
+		});
 	} catch (error) {
 		console.error("Error fetching posts:", error);
 		return NextResponse.json(
