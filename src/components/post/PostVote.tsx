@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowBigUp, ArrowBigDown, Frown, SmilePlus, Meh } from "lucide-react";
 import PostVoteCount from "@/components/post/PostVoteCount";
@@ -35,6 +35,15 @@ const PostVote: React.FC<PostVoteProps> = ({
 	const [localUpVotes, setLocalUpVotes] = useState(initialUpVotes);
 	const [localDownVotes, setLocalDownVotes] = useState(initialDownVotes);
 	const [localUserVote, setLocalUserVote] = useState(initialUserVote);
+
+	// Synchronize localUserVote with initialUserVote prop.
+	// This ensures that if the userVote prop changes (e.g., after client-side data fetching
+	// corrects an initial server-side render mismatch), the component's local state
+	// and thus the button display will update accordingly.
+	useEffect(() => {
+		setLocalUserVote(initialUserVote);
+	}, [initialUserVote]);
+
 	const postUrl = postId
 		? `${window.location.origin}/posts/${postId}`
 		: undefined;
