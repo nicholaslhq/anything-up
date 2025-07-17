@@ -373,7 +373,7 @@ export async function GET(request: Request) {
 			where: {
 				...where,
 				type: {
-					not: PostType.PINNED, // Count only standard posts
+					notIn: [PostType.PINNED, PostType.RESTRICTED], // Exclude Pinned and Restricted posts
 				},
 			},
 		});
