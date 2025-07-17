@@ -274,11 +274,13 @@ export async function GET(request: Request) {
 				expiredAt: true,
 				userId: true, // Added userId
 				tags: { select: { name: true } },
-				votes: {
-					where: { userId: userId },
-					take: 1,
-					select: { type: true },
-				},
+				votes: userId // Only include votes if userId is present
+					? {
+							where: { userId: userId },
+							take: 1,
+							select: { type: true },
+					  }
+					: undefined, // Do not include votes relation if userId is not present
 			},
 		});
 
@@ -317,11 +319,13 @@ export async function GET(request: Request) {
 						expiredAt: true,
 						userId: true,
 						tags: { select: { name: true } },
-						votes: {
-							where: { userId: userId },
-							take: 1,
-							select: { type: true },
-						},
+						votes: userId // Only include votes if userId is present
+							? {
+									where: { userId: userId },
+									take: 1,
+									select: { type: true },
+							  }
+							: undefined, // Do not include votes relation if userId is not present
 					},
 					orderBy: {
 						createdAt: "desc",
@@ -352,11 +356,13 @@ export async function GET(request: Request) {
 							expiredAt: true,
 							userId: true,
 							tags: { select: { name: true } },
-							votes: {
-								where: { userId: userId },
-								take: 1,
-								select: { type: true },
-							},
+							votes: userId // Only include votes if userId is present
+								? {
+										where: { userId: userId },
+										take: 1,
+										select: { type: true },
+								  }
+								: undefined, // Do not include votes relation if userId is not present
 						},
 						orderBy: {
 							createdAt: "desc",
@@ -408,8 +414,11 @@ export async function GET(request: Request) {
 		const postsWithDetails: ProcessedPost[] = combinedPosts.map(
 			(post: PostWithRelations) => {
 				// User's vote is directly available from the included relation
+				// Ensure post.votes exists before checking its length
 				const userVote =
-					post.votes.length > 0 ? post.votes[0].type : null;
+					userId && post.votes && post.votes.length > 0
+						? post.votes[0].type
+						: null;
 
 				// Use pre-calculated vote counts directly from the post object
 
