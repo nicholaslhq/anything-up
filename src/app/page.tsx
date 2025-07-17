@@ -36,7 +36,6 @@ export default function Home() {
 	const loadingRef = useRef(loading); // Ref to track loading state for timeout
 	const [empty, setEmpty] = useState(false);
 	const [content, setContent] = useState("");
-	const [isSubmitting, setIsSubmitting] = useState(false); // Add submitting state
 	const [sortBy, setSortBy] = useState<string>("");
 	const [isSortByInitialized, setIsSortByInitialized] = useState(false); // New state to track sortBy initialization
 	const [refreshPosts, setRefreshPosts] = useState(false);
@@ -369,7 +368,6 @@ export default function Home() {
 			});
 			return false; // Indicate failure
 		}
-		setIsSubmitting(true); // Set submitting to true
 		try {
 			const res = await fetch("/api/posts", {
 				method: "POST",
@@ -448,8 +446,6 @@ export default function Home() {
 				variant: "destructive",
 			});
 			return false; // Indicate failure
-		} finally {
-			setIsSubmitting(false); // Set submitting to false in finally block
 		}
 	};
 
@@ -486,7 +482,6 @@ export default function Home() {
 					content={content}
 					setContent={setContent}
 					ref={postFormRef}
-					isSubmitting={isSubmitting} // Pass submitting state
 				/>
 				{/* Initial Loading State (only when no posts loaded yet) */}
 				{loading && standardPosts.length === 0 && (
