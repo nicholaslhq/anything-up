@@ -6,12 +6,12 @@ import {
 	SETTING_POST_DEFAULT_EXPIRATION_DAYS,
 	SETTING_POST_HOT_SORT_RETROSPECTIVE_DAYS,
 	SETTING_POST_MAX_POSTS_PER_HOUR,
+	SETTING_POST_PINNED_CACHE_TTL,
 } from "@/lib/settings";
 
 // --- Caching for Pinned Posts ---
 let cachedPinnedPosts: PostWithRelations[] | null = null;
 let pinnedPostsCacheTimestamp: number = 0;
-const PINNED_POST_CACHE_TTL = 60 * 60 * 1000; // 60 minutes
 
 // --- Type Definitions ---
 
@@ -287,7 +287,7 @@ export async function GET(request: Request) {
 			const now = Date.now();
 			if (
 				!cachedPinnedPosts ||
-				now - pinnedPostsCacheTimestamp > PINNED_POST_CACHE_TTL
+				now - pinnedPostsCacheTimestamp > SETTING_POST_PINNED_CACHE_TTL
 			) {
 				// Cache miss or expired, fetch from DB
 				pinnedPosts = (await prisma.post.findMany({

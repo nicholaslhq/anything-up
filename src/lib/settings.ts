@@ -11,3 +11,4 @@ export const SETTING_HOOKS_TOAST_LIMIT = 1; // Maximum number of toasts to displ
 export const SETTING_HOOKS_TOAST_REMOVE_DELAY = 5000; // Delay in milliseconds before a toast automatically removes itself
 export const SETTING_POST_PAGE_SIZE = 10; // Defines the number of items to fetch per page in data requests.
 export const SETTING_POST_PREFETCH_DISTANCE = 10; // Defines how many pages ahead to prefetch data for smoother scrolling.
+export const SETTING_POST_PINNED_CACHE_TTL = 60 * 60 * 1000; // Time To Live (TTL) for pinned posts cache in milliseconds (60 minutes)
