@@ -33,8 +33,8 @@ export interface Post {
 export default function Home() {
 	const [pinnedPosts, setPinnedPosts] = useState<PostType[]>([]);
 	const [standardPosts, setStandardPosts] = useState<PostType[]>([]);
-	const [filteredPosts, setFilteredPosts] = useState<PostType[]>([]);
 	const [loading, setLoading] = useState(false); // Initial load loading
+	const loadingRef = useRef(loading); // Ref to track loading state for timeout
 	const [empty, setEmpty] = useState(false);
 	const [content, setContent] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false); // Add submitting state
@@ -52,6 +52,10 @@ export default function Home() {
 	const [loadingMore, setLoadingMore] = useState(false); // Loading state for subsequent fetches
 	const [loadMoreError, setLoadMoreError] = useState<string | null>(null); // Error state for subsequent fetches
 
+	useEffect(() => {
+		loadingRef.current = loading;
+	}, [loading]); // Keep ref updated
+
 	// --- New Function: fetchMorePosts (Moved Before lastPostElementRef) ---
 	const fetchMorePosts = useCallback(
 		async (isRetry = false) => {
@@ -68,9 +72,10 @@ export default function Home() {
 
 			try {
 				const nextPage = page + 1;
+				const tagQuery = selectedTag ? `&tag=${selectedTag}` : ""; // Add tag query parameter
 				res = await fetch(
 					// Assign to outer res
-					`/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}&page=${nextPage}&limit=${SETTING_POST_PREFETCH_DISTANCE}`
+					`/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}&page=${nextPage}&limit=${SETTING_POST_PREFETCH_DISTANCE}${tagQuery}`
 				);
 
 				if (!res.ok) {
@@ -140,6 +145,7 @@ export default function Home() {
 			loadingMore,
 			sortBy,
 			timePeriod,
+			selectedTag,
 			standardPosts,
 			pinnedPosts,
 		]
@@ -196,19 +202,17 @@ export default function Home() {
 		}
 
 		const fetchInitialPosts = async () => {
-			// console.log(`Fetching initial posts: sortBy=${sortBy}, timePeriod=${timePeriod}`);
 			setLoading(true);
 			setError(null);
 			setPinnedPosts([]); // Clear pinned posts on new initial fetch
 			setStandardPosts([]); // Clear standard posts on new initial fetch
-			setFilteredPosts([]); // Clear filtered posts
 			setPage(1); // Reset page number for new sort/filter
 			setHasMore(true); // Assume there are more posts initially
 			setLoadMoreError(null); // Clear load more error
 			setLoadingMore(false); // Ensure loading more is false
 			const timeoutId = setTimeout(() => {
-				if (loading) {
-					// Check if still loading (might have finished quickly)
+				if (loadingRef.current) {
+					// Check if still loading using ref
 					setError(
 						"Failed to load posts. Please check your connection."
 					);
@@ -219,8 +223,9 @@ export default function Home() {
 
 			try {
 				// Fetch initial batch
+				const tagQuery = selectedTag ? `&tag=${selectedTag}` : ""; // Add tag query parameter
 				const res = await fetch(
-					`/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}&page=1&limit=${SETTING_POST_PAGE_SIZE}`
+					`/api/posts?sortBy=${sortBy}&timePeriod=${timePeriod}&page=1&limit=${SETTING_POST_PAGE_SIZE}${tagQuery}`
 				);
 				clearTimeout(timeoutId); // Clear timeout on successful response start
 
@@ -265,21 +270,7 @@ export default function Home() {
 		};
 
 		fetchInitialPosts();
-	}, [sortBy, timePeriod, isUserIdAvailable, refreshPosts]); // Added refreshPosts dependency
-
-	// --- useEffect for filtering based on selectedTag ---
-	useEffect(() => {
-		// This effect now correctly filters the currently loaded standardPosts
-		const matchingPosts = selectedTag
-			? standardPosts.filter((post) =>
-					post.tags?.some(
-						(tag) => tag.toLowerCase() === selectedTag.toLowerCase()
-					)
-			  )
-			: standardPosts; // If no tag selected, show all standard posts
-		setFilteredPosts(matchingPosts);
-		// No pagination reset needed here, filtering is client-side on loaded data
-	}, [selectedTag, standardPosts]);
+	}, [sortBy, timePeriod, isUserIdAvailable, refreshPosts, selectedTag]);
 
 	// --- fetchMorePosts is now defined above lastPostElementRef ---
 
@@ -522,12 +513,12 @@ export default function Home() {
 		setSelectedTag((prevSelectedTag) =>
 			prevSelectedTag === tag ? null : tag
 		);
-		// When a tag is clicked/unclicked, scroll to top might be desired
+		// When a tag is clicked/unclicked, a new fetch will be triggered by the useEffect
 		// window.scrollTo({ top: 0, behavior: 'smooth' }); // Optional: scroll to top
 	};
 
-	// Determine which list of posts to render based on filtering
-	const postsToRender = selectedTag ? filteredPosts : standardPosts;
+	// postsToRender will always be standardPosts as filtering is now server-side
+	const postsToRender = standardPosts;
 
 	return (
 		<div className="min-h-screen p-4 sm:p-10 font-[family-name:var(--font-geist-sans)]">

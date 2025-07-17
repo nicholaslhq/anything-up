@@ -167,6 +167,7 @@ export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const sortBy = searchParams.get("sortBy") ?? "hot"; // Default sort
 	const timePeriod = searchParams.get("timePeriod") ?? "day"; // Default time period
+	const tag = searchParams.get("tag");
 	const pageParam = searchParams.get("page");
 	const limitParam = searchParams.get("limit");
 	const userId = (await cookies()).get("userId")?.value;
@@ -199,6 +200,17 @@ export async function GET(request: Request) {
 			expiredAt: { gt: new Date() },
 			type: PostType.STANDARD, // Only fetch standard posts for pagination
 		};
+
+		if (tag) {
+			where = {
+				...where,
+				tags: {
+					some: {
+						name: tag,
+					},
+				},
+			};
+		}
 
 		// --- Sorting and Filtering Logic ---
 		if (sortBy === "new") {
