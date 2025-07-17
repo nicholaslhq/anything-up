@@ -551,6 +551,17 @@ export default function Home() {
 						</div>
 					);
 				})}
+				{/* Loading Skeleton for Filtering (when posts exist and loading is true) */}
+				{loading && standardPosts.length > 0 && (
+					<div className="w-full sm:max-w-lg">
+						<PostStatus
+							error={null}
+							loading={loading}
+							empty={false}
+							expired={false}
+						/>
+					</div>
+				)}
 				{/* Loading More Indicator */}
 				{loadingMore && (
 					<PostStatus
