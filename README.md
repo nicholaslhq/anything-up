@@ -1,4 +1,4 @@
-# Anything Up ⬆️
+# AnythingUp⬆️
 
 A minimalist, privacy-first platform for anonymous content sharing and discovery. No logins. No profiles. Just pure content.
 
@@ -8,6 +8,14 @@ A minimalist, privacy-first platform for anonymous content sharing and discovery
 -   **Community-powered** - Content rises and falls based purely on votes
 -   **Self-cleaning** - Inactive posts automatically expire, keeping the feed fresh
 -   **Simplicity**: Intuitive interface with no unnecessary features
+
+## 🖼️ Screenshots
+
+Below are some screenshots of the AnythingUp in action:
+
+![image](https://github.com/user-attachments/assets/374a9483-cd61-48d3-85e6-2e720c9be2b9)
+
+![image](https://github.com/user-attachments/assets/9194fceb-387a-46a5-859c-a0ab13b3219f)
 
 ## 🛠️ Technology Stack
 
